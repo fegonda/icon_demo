@@ -1,0 +1,950 @@
+#---------------------------------------------------------------------------
+# datasets.py
+#
+# Author  : Felix Gonda
+# Date    : July 12, 2015
+# School  : Harvard University
+#
+# Project : Master Thesis
+#           An Interactive Deep Learning Toolkit for
+#           Automatic Segmentation of Images
+#
+# Summary : This file contains the implementation of a dataset class
+#           that houses all data used by the learning model.  The data
+#           is loaded through the load_* methods.
+#---------------------------------------------------------------------------
+
+
+import os
+import sys
+import math
+import theano
+import theano.tensor as T
+import numpy as np
+import mahotas
+import scipy.ndimage
+import scipy.misc
+import skimage.transform
+import glob
+import random
+import time
+import sys
+import shutil
+import json
+import PIL.Image
+
+base_path = os.path.dirname(__file__)
+sys.path.insert(1,os.path.join(base_path, '../common'))
+
+from utility import Utility
+from settings import Paths
+#from database import Database
+from project import Project
+from db import DB
+
+
+class EntryOLD:
+    def __init__(self, name, offset, length, loffsets, lsizes):
+        self.name          = name 	
+        self.offset        = offset
+        self.length        = length
+        self.label_offsets = loffsets
+        self.label_sizes   = lsizes
+
+class Entry:
+    def __init__(self, name, offset, length):
+        self.name   = name
+        self.offset = offset
+        self.length = length
+
+class LabelData:
+    def __init__(self):
+        self.indices = []
+        self.i_train = []
+        self.i_valid = []
+        self.n_train = 0
+        self.n_valid = 0 
+
+    def reset(self):
+        print 'LabelData.reset...'
+        # merge the training and validation indices to the main queue
+        self.indices = np.hstack( (self.indices, self.i_train) )
+        self.indices = np.hstack( (self.indices, self.i_valid) )
+        self.i_train = []
+        self.i_valid = []
+
+    def allocate(self, n_train, n_valid):
+
+        print 'LabelData.allocate...'
+        self.reset()
+        print 'request n_train:', n_train, 'nvalid:', n_valid
+
+        # determine the size of the training and validation samples
+        n_indices = len(self.indices)
+        n_train   = min(n_indices, n_train)
+        n_diff    = max(n_indices - n_train, 0)
+        n_valid   = min(n_diff, n_valid)
+
+        # allocate the training and validation samples
+        self.i_train = self.indices[:n_train]
+        self.i_valid = self.indices[n_train:n_train+n_valid]
+        self.indices = self.indices[n_train+n_valid:]
+
+        self.n_train = n_train
+        self.n_valid = n_valid
+
+        print 'n_train:', n_train
+        print '# train:', len(self.i_train)
+        print 'n_valid:', n_valid
+        print '# valid:', len(self.i_valid)
+        print '#remind:', len(self.indices)
+
+    def randomize(self):
+        print 'LabelData.randomize...'
+        self.reset()
+        n_indices    = len(self.indices)
+        print 'reset - nindices:', n_indices
+
+        self.indices = np.random.choice( self.indices, n_indices, replace=False)
+        self.allocate( self.n_train, self.n_valid )
+
+    def nsamples(self):
+        return len(self.i_train) + len(self.i_valid)
+
+class Data:
+
+    Split                  = [0.8, 0.10, 0.05]
+    TrainMax               = 1024*6
+    ValidMax               = 1024*2
+    MinSamples             = 1024*64  
+    MaxSamples             = 1024*1024 # about 13 GB of ram needed
+    TrainSuperBatchSize    = 1024*6
+    ValidSuperBatchSize    = 1024*2    
+
+    #-------------------------------------------------------------------
+    # Main constructor of the datasets. Initializes the associated
+    # image id and settings, and invalidates the datasets until
+    # later loaded via the load_* methods
+    #-------------------------------------------------------------------
+    def __init__(self, project):
+        self.project   = project
+        self.entries   = []
+        self.x         = []
+        self.y         = []
+        self.p         = []
+        self.l         = []
+        self.i         = []
+        self.i_train   = []
+        self.i_valid   = []
+
+    def save_stats(self, project):
+        print '-------------------------------------------------------------------'
+        for entry in self.entries:
+            i = np.arange( entry.offset, entry.offset+entry.length )
+            y = self.y[ i ]
+            p = self.p[ i ]
+            n_good  = len( np.where( p == 0 )[0] )
+            score = 0.0 if n_good == 0 else float(n_good)/len(p)
+            DB.storeTrainingScore( project.id, entry.name, score )
+            print 'image (%s)(%.2f)'%(entry.name, score)
+        print '-------------------------------------------------------------------'
+
+    def valid(self): 
+        '''
+        print 'Data.valid...'
+        print '#l:', len(self.l)
+        print '#y:', len(self.y)
+        print '#entries:', len(self.entries)
+        print '#req:', (Data.TrainMax + Data.ValidMax)
+        '''
+        return len(self.y) > (Data.TrainMax + Data.ValidMax)
+
+    def randomize(self):
+        self.i_train = []
+        self.i_valid = []
+        for i in range( len(self.l) ):
+            self.l[i].randomize()
+            self.i_train = np.concatenate( (self.i_train, self.l[i].i_train ) )
+            self.i_valid = np.concatenate( (self.i_valid, self.l[i].i_valid ) )
+
+        self.i_train = self.i_train.astype(dtype=int)
+        self.i_valid = self.i_valid.astype(dtype=int)
+
+        print '#train:', len(self.i_train)
+        print '#valid:', len(self.i_valid)
+        print ' train:', self.i_train
+        print ' valid;', self.i_valid 
+
+    def load(self, project):
+
+        '''
+        nsamples = Data.MaxSamples
+
+        if len(self.y) == 0:
+            imageId = 'ac3_input_0003'
+            #nsamples  = Data.TrainMax + Data.ValidMax
+            self.x, self.y = self.gen_samples( project, imageId, nsamples )
+            self.indices = np.arange( 0, len(self.y) )
+    
+        if True:
+            return
+        '''
+
+        # retrieve the list of training images 
+        # (annotated images)
+        first_time = (len(self.entries) == 0)
+        images     = DB.getTrainingImages( project.id, new=(not first_time) )
+
+        # bailout if there's no images to train.
+        if len(images) == 0:
+            return
+
+        # determine the maximum number of samples to draw
+        # from each image
+        n_samples_per_image = Data.MaxSamples/len(images)
+
+        print '#n_samples_per_image:', n_samples_per_image
+        print '#images:', len(images)
+
+        entries = []
+
+        # Load training samples for each image.
+        for image in images:
+
+            Utility.report_status( 'loading data for', image.id)
+
+            offset = len( entries )
+
+            # generate samples for the image
+            data   = self.gen_samples( project, image.id, n_samples_per_image )
+            x_data = data[0]
+            y_data = data[1]
+            n_data = len( y_data )
+
+            # skip if no annotations found
+            if n_data == 0:
+                continue
+
+            # add sample to the training set
+            if offset == 0:
+                x = x_data
+                y = y_data
+                p = np.ones( n_data, dtype=np.int )
+            else:
+                x = np.vstack( (x, x_data) )
+                y = np.hstack( (y, y_data) )
+                p = np.hstack( (p, np.ones( n_data, dtype=np.int )) ) 
+
+            # keep track of each image's data in an entry for 
+            # easier replacement.
+            entries.append( Entry( image.id, offset, n_data ) )
+
+            Utility.report_memused()
+            print 'mem size x:', x.nbytes
+            print 'mem size y:', y.nbytes
+            print 'mem size p:', p.nbytes
+            print '    nydata:', n_data
+            print '  #entries:', len( entries )
+
+
+        # bailout if no entries found
+        if len(entries) == 0:
+            Utility.report_status('Fetching new data', 'None Found')
+            return
+
+        Utility.report_status( 'Adding new data to training set','')
+
+        # bailout if no current entries
+        if len(self.entries) > 0:
+            #append old entries after the new entries
+            offset = len(y)
+
+            print entries[-1].name, entries[-1].offset, entries[-1].length
+            mask = np.ones( len(self.y), dtype=bool)
+            names = [ e.name for e in entries ]
+
+            for entry in self.entries:
+                if entry.name in names:
+                    mask[ entry.offset : entry.offset+entry.length ] = False
+                else:
+                    entry.offset = offset
+                    offset += entry.length
+                    entries.append( entry )
+                    print entry.name, entry.offset, entry.length
+
+            x_keep = self.x[ mask ]
+            y_keep = self.y[ mask ]
+            p_keep = self.p[ mask ]
+            x = np.vstack( (x, x_keep) )
+            y = np.hstack( (y, y_keep) )
+            p = np.hstack( (p, p_keep) )
+
+        Utility.report_status('loading complete...', '')
+        n_data = len(y)
+
+        # save the data
+        self.x = x
+        self.y = y
+        self.p = p
+        self.i = np.arange( n_data )
+        self.i = np.random.choice(self.i, len(self.i), replace=False)
+        self.entries = entries
+
+        Utility.report_memused()
+        print 'max:', np.min(self.x)
+        print 'min:', np.max(self.x)
+        print 'mem size x:', self.x.nbytes
+        print 'mem size y:', self.y.nbytes
+        print 'mem size p:', self.p.nbytes
+        print '#samples  :', n_data
+        print '  #entries:', len( self.entries )
+            
+    def samplelll(self):
+
+        n_data = len(self.y)
+        
+        if n_data < (Data.TrainSuperBatchSize + Data.ValidSuperBatchSize):
+            print 'Data.sample - not enough data...'
+            return
+
+        if len(self.i_train) > 0:
+            print 'stratified sampling....'
+            self.i = np.concatenate( (self.i, self.i_train) )
+            self.i = np.concatenate( (self.i, self.i_valid) )
+            self.i = np.random.choice(self.i, len(self.i), replace=False)
+            #exit(1)
+
+        # extract training and validation set indices
+        self.i_train = self.i[:Data.TrainSuperBatchSize]
+        self.i_valid = self.i[Data.TrainSuperBatchSize:Data.TrainSuperBatchSize+Data.ValidSuperBatchSize]
+
+        # keep the remaining indices for next sampling
+        self.i       = self.i[Data.TrainSuperBatchSize:Data.TrainSuperBatchSize+Data.ValidSuperBatchSize:]
+
+        # extract the actual data
+        x_train = self.x[ self.i_train ]
+        y_train = self.y[ self.i_train ]
+        x_valid = self.x[ self.i_valid ]
+        y_valid = self.y[ self.i_valid ]
+
+        print type(x_train)
+        print type(y_train)
+        print 'x_train:', x_train
+        print 'y_train:', y_train
+        print 'x_valid:', x_valid
+        print 'y_valid:', y_valid
+        print 'i:', self.i.shape
+        print 'it:', self.i_train.shape
+        print 'iv:', self.i_valid.shape
+        print 'xt:', x_train.shape
+        print 'yt:', y_train.shape
+        print 'xv:', x_valid.shape
+        print 'yv:', y_valid.shape
+
+        return x_train, y_train, x_valid, y_valid
+
+
+    def sample(self):
+
+        #indices = np.random.choice( self.indices, len(self.indices), replace=False)
+        #indices = indices.astype(dtype=int)
+        indices  = np.random.choice( self.i, len(self.i), replace=False)
+        indices = indices.astype(dtype=int)
+    
+        i_train = indices[:Data.TrainMax]
+        i_valid = indices[Data.TrainMax:Data.TrainMax+Data.ValidMax]
+
+        x_train = self.x[ i_train ]
+        y_train = self.y[ i_train ]
+        x_valid = self.x[ i_valid ]
+        y_valid = self.y[ i_valid ]
+
+        print type(x_train)
+        print type(y_train)
+        print 'x_train:', x_train
+        print 'y_train:', y_train
+        print 'x_valid:', x_valid
+        print 'y_valid:', y_valid
+        print x_train.shape
+        print y_train.shape
+        print x_valid.shape
+        print y_valid.shape
+        print np.min( x_train )
+        print np.max( x_train )
+        print np.min( y_train )
+        print np.max( y_train )
+        return x_train, y_train, x_valid, y_valid
+        
+    def samplea(self):
+        print 'Data.sample....'
+        #print 'n_train_samples:', self.n_train_samples
+        #print 'n_valid_samples:', self.n_valid_samples
+        self.randomize()
+
+        x_train = self.x[ self.i_train ]
+        y_train = self.y[ self.i_train ]
+        x_valid = self.x[ self.i_valid ]
+        y_valid = self.y[ self.i_valid ]
+
+        print type(x_train)
+        print type(y_train)
+        print 'x_train:', x_train
+        print 'y_train:', y_train
+        print 'x_valid:', x_valid
+        print 'y_valid:', y_valid
+        print x_train.shape
+        print y_train.shape
+        print x_valid.shape
+        print y_valid.shape
+
+        return x_train, y_train, x_valid, y_valid
+       
+    def setup_indices(self):
+
+        n_labels        = len( self.l )
+        n_train_samples = Data.TrainMax/n_labels
+        n_valid_samples = Data.ValidMax/n_labels;
+        n_samples       = n_train_samples + n_valid_samples
+        n_total_train   = 0
+        n_total_valid   = 0
+
+        for i in range(n_labels):
+            self.l[i].allocate( n_train_samples, n_valid_samples )
+            n_total_train += self.l[i].n_train
+            n_total_valid += self.l[i].n_valid
+
+        n_train_diff = Data.TrainMax - n_total_train
+        n_valid_diff = Data.ValidMax - n_total_valid
+
+        if n_train_diff == 0 and n_valid_diff == 0:
+            return
+
+        for i in range(n_labels):
+            n_total = self.l[i].n_train + self.l[i].n_valid
+            if n_total == n_samples:
+                n_train_diff += self.l[i].n_train
+                n_valid_diff += self.l[i].n_valid
+
+                self.l[i].allocate( n_train_diff, n_valid_diff )
+
+                n_train_diff -= self.l[i].n_train
+                n_valid_diff -= self.l[i].n_valid
+                print 'n_train_diff:', n_train_diff
+                print 'n_valid_diff:', n_valid_diff
+            
+            if n_train_diff <= 0 and n_valid_diff <= 0:
+                break            
+
+
+    #-------------------------------------------------------------------
+    # This function loads training, test, and validation data to be
+    # use for learning features.
+    # returns True if new data is added, False otherwise
+    #-------------------------------------------------------------------
+    def loadold(self, project):
+
+        get_new_data = (len(self.entries) > 0)
+
+        # Build the training sets by reading in annotations
+        # for all images seen so far.
+
+        #labels = Database.getLabels( self.project )
+
+        num_images = 0
+        #tasks = Database.getTrainingTasks( self.project, not first_time )
+        #Database.finishLoadingTrainingTask( self.project )
+
+        labels  = DB.getLabels( project.id )
+        images  = DB.getTrainingImages( project.id, new=get_new_data )
+
+        print '#labels:', len(labels)
+
+        entries = []
+        offset = 0
+        num_entries = 0
+        max_images = 15
+
+        for task in images:
+
+            if len(entries) > max_images:
+                break
+
+            image_id = task.id
+
+
+            path = '%s/%s.tif'%(Paths.TrainGrayscale, image_id)
+            image_p = Utility.get_image_padded( path, project.patchSize )
+
+            image_p = Utility.read_image( path, project.patchSize, padded=True)
+            data =	Utility.get_training_data(
+                    project.id,
+                    image_id, 
+                    image_p, 
+                    project.patchSize,
+                    Paths.Labels)
+
+            success = data[0]
+            xdata   = data[1]
+            ydata   = data[2]
+            loffsets= data[3]
+            lsizes  = data[4]
+
+            if not success:
+                continue
+
+            Utility.report_status('loading training data for', image_id)
+
+            n_ydata = len(ydata)
+            offset = num_entries
+            num_entries += n_ydata
+            entry = Entry( image_id, offset, n_ydata, loffsets, lsizes )
+            entries.append( entry )
+
+            if offset == 0:
+                x = xdata
+                y = ydata
+                p = np.ones( n_ydata, dtype=np.int )
+            else:
+                x = np.vstack( (x, xdata) )
+                y = np.hstack( (y, ydata) )		
+                p = np.hstack( (p, np.ones( n_ydata, dtype=np.int )) ) 
+
+
+            Utility.report_memused()
+            print 'mem size x:', x.nbytes 
+            print 'mem size y:', y.nbytes
+            print 'mem size p:', p.nbytes
+            print '    nydata:', n_ydata
+            print '  #entries:', num_entries
+            print '     sizes:', lsizes
+            print '   offsets:', loffsets
+
+        if num_entries == 0:
+            print 'no new data entries found...'
+            return False
+
+        print 'begin stacking.....'
+        Utility.report_memused()
+        print 'mem size x:', x.nbytes
+        print 'mem size y:', y.nbytes 
+        print 'mem size p:', p.nbytes
+
+        #append old entries
+        if len(self.entries) > 0:
+            offset = len(y)
+            print entries[-1].name, entries[-1].offset, entries[-1].length
+            mask = np.ones( len(self.y), dtype=bool)
+            names = [ e.name for e in entries ]
+
+            for entry in self.entries:
+                if entry.name in names:
+                    mask[ entry.offset : entry.offset+entry.length ] = False
+                else:
+                    entry.offset = offset
+                    offset += entry.length
+                    entries.append( entry )
+                    print entry.name, entry.offset, entry.length
+
+            x_keep = self.x[ mask ]
+            y_keep = self.y[ mask ]
+            p_keep = self.p[ mask ]
+            x = np.vstack( (x, x_keep) )
+            y = np.hstack( (y, y_keep) )
+            p = np.hstack( (p, p_keep) )	
+
+        print 'done stacking...'
+
+        # cumulative number of labels in annotations must
+        # equal the number of labels in project
+        if len(np.unique( y )) != len(labels):
+            # update status to not enugh annotations
+            DB.updateTrainingStatus(project.id, 2)
+            return
+
+
+        # generate indices based on labels
+        #self.l = [[] for l in labels]
+        self.l = [ LabelData() for l in labels]
+        #self.l = np.array( self.l )
+
+        total = 0
+        for i in range( len(self.l) ):
+            print 'i:', i
+            for entry in entries:
+                offset    = entry.offset + entry.label_offsets[ i ]
+                size      = entry.label_sizes[ i ]
+                indices   = np.arange( size, dtype=np.int ) + offset
+                self.l[i].indices = np.concatenate( (self.l[i].indices, indices), axis=0).astype(dtype=int)
+                print '---'
+                print offset, offset+size, size
+                print self.l[i].indices
+                total += entry.label_sizes[ i ]
+
+        print '==>total:', total
+        self.l = np.array( self.l )
+
+        Utility.report_status('loading complete...', '')
+        self.x = x
+        self.y = y
+        self.p = p
+        self.entries = entries
+
+        self.setup_indices()
+
+        print '-----------------------------------'
+        print '#entries:', len(self.entries)
+        print '#newentries:', len(entries)
+        print num_entries
+        print 'x:', x.shape
+        print 'y:', y.shape
+        print 'p:', p.shape
+        print 'l:', self.l.shape
+        print y
+        print p
+
+        # TODO.
+        # you need to shuffle your data if you're going to split by percentages.
+        # restrict upper limit on validation set:q
+
+        DB.finishLoadingTrainingset( project.id )
+        return True
+
+    def gen_samples_one(self, project, imageId, nsamples):
+
+        data_mean=project.mean
+        data_std=project.std
+        
+        annPath = '%s/%s.%s.json'%(Paths.Labels, imageId, project.id)
+        imgPath = '%s/%s.tif'%(Paths.TrainGrayscale, imageId)
+
+        print annPath
+        print imgPath
+
+        if not os.path.exists(annPath) or not os.path.exists( imgPath):
+            return False
+            
+        with open(annPath) as json_file: 
+            annotations = json.load( json_file )
+
+        # compute the sample sizes for each label in the annotations
+        n_samples_size  = nsamples/len(annotations)
+        samples_sizes = []
+        for coordinates in annotations:
+            n_label_samples_size = len(coordinates)/2
+            n_label_samples_size = min( n_label_samples_size, n_samples_size )
+            samples_sizes.append( n_label_samples_size )
+
+        # bailout if not enough samples in the annotations
+        n_total = np.sum(samples_sizes)
+        if n_total < Data.MinSamples:
+            print 'Data.gen_samples'
+            print 'Not enough samples in image: %s'%(imageId)
+            return [], []
+
+        # recompute the label sample sizes to ensure the min required samples
+        # is fullfiled
+        n_diff = nsamples - n_total
+        i = 0
+        while n_diff > 0 and i < len(annotations):
+            n_label_samples_size = len(annotations[i])/2
+            n_add_samples_size   = n_label_samples_size - samples_sizes[i]
+            n_add_samples_size   = min( n_add_samples_size, n_diff )
+            n_add_samples_size   = max( n_add_samples_size, 0)
+            samples_sizes[i]  += n_add_samples_size 
+            n_diff              -= n_add_samples_size
+            i                   += 1
+
+        print 'nsamples:', nsamples
+        print 'nsamples actual:', np.sum( samples_sizes )
+        print 'n_samples_size:', n_samples_size
+        print 'sample sizes:', samples_sizes
+        print 'len samples:', len(samples_sizes)
+        print '#samples: ', np.sum(samples_sizes)
+        print '#actual:', np.sum( [ len(c)/2 for c in annotations ] )
+
+        mode   = 'symmetric' 
+        patchSize = project.patchSize
+        pad = patchSize
+        img = mahotas.imread( imgPath )
+        img = np.pad(img, ((pad, pad), (pad, pad)), mode)  
+        img = Utility.normalizeImage(img)
+
+        whole_set_patches = np.zeros((nsamples, patchSize*patchSize), dtype=np.float)
+        whole_set_labels = np.zeros(nsamples, dtype=np.int32)
+
+        border_patch = np.ceil(patchSize/2.0)
+        border = np.ceil(np.sqrt(2*(border_patch**2)))                
+
+        counter = 0
+        for label, coordinates in enumerate( annotations ): 
+
+            ncoordinates = len(coordinates)  
+            n_label_samples = samples_sizes[ label ] 
+
+            num   = (ncoordinates/2)
+            start = 0
+            stop  = ncoordinates-2
+            indices = np.linspace(start=start,stop=stop, num=num)
+            indices = indices.astype(dtype=int)
+            '''
+            print 'ncoords:', ncoordinates, 'label:', label, 'indices:', indices
+            #print 'coords:', np.max(coordinates)
+            indices = np.random.choice( indices, n_label_samples, replace=False)
+            print 'ncoords:', ncoordinates, 'label:', label, 'indices:', indices
+
+            #np.random.choice( self.indices, n_indices, replace=False)
+            '''
+            n_sample_count = 0
+            #for i in range(0, ncoordinates, 2):
+            for i in indices:
+
+                col = coordinates[i]
+                row = coordinates[i+1]
+                r1  = row+patchSize-border_patch
+                r2  = row+patchSize+border_patch+1
+                c1  = col+patchSize-border_patch
+                c2  = col+patchSize+border_patch+1
+                
+                imgPatch = img[r1:r2,c1:c2]
+                imgPatch = skimage.transform.rotate(imgPatch, random.choice(xrange(360)))
+                imgPatch = imgPatch[0:patchSize,0:patchSize]
+
+                if random.random() < 0.5:
+                    imgPatch = np.fliplr(imgPatch)
+
+                whole_set_patches[counter,:] = imgPatch.flatten()
+                whole_set_labels[counter] = label
+                counter += 1
+
+        whole_data = np.float32(whole_set_patches)
+        if data_mean == None:
+            whole_data_mean = np.mean(whole_data,axis=0)
+        else:
+            whole_data_mean = data_mean
+
+        whole_data = whole_data - np.tile(whole_data_mean,(np.shape(whole_data)[0],1))
+        if data_std == None:
+            whole_data_std = np.std(whole_data,axis=0)
+        else:
+            whole_data_std = data_std
+
+        whole_data_std = np.clip(whole_data_std, 0.00001, np.max(whole_data_std))
+        whole_data = whole_data / np.tile(whole_data_std,(np.shape(whole_data)[0],1))
+
+        return whole_data, whole_set_labels
+
+
+    def gen_samples(self, project, imageId, nsamples):
+
+        data_mean=project.mean
+        data_std=project.std
+
+        annPath = '%s/%s.%s.json'%(Paths.Labels, imageId, project.id)
+        imgPath = '%s/%s.tif'%(Paths.TrainGrayscale, imageId)
+
+        print annPath
+        print imgPath
+
+        if not os.path.exists(annPath) or not os.path.exists( imgPath):
+            return [], []
+
+        with open(annPath) as json_file:
+            annotations = json.load( json_file )
+
+        if len(annotations) == 0:
+            return [], []
+
+        n_labels  = len(annotations)
+
+        # compute the sample sizes for each label in the annotations
+        n_samples_size  = nsamples/n_labels
+        samples_sizes = []
+        for coordinates in annotations:
+            n_label_samples_size = len(coordinates)/2
+            n_label_samples_size = min( n_label_samples_size, n_samples_size )
+            samples_sizes.append( n_label_samples_size )
+
+        # bailout if not enough samples in the annotations
+        n_total = np.sum(samples_sizes)
+        if n_total < Data.MinSamples:
+            print 'Data.gen_samples'
+            print 'Not enough samples in image: %s'%(imageId)
+            return [], []
+
+        # recompute the label sample sizes to ensure the min required samples
+        # is fullfiled
+        n_diff = nsamples - n_total
+        i = 0
+        while n_diff > 0 and i < n_labels:
+            n_label_samples_size = len(annotations[i])/2
+            n_add_samples_size   = n_label_samples_size - samples_sizes[i]
+            n_add_samples_size   = min( n_add_samples_size, n_diff )
+            n_add_samples_size   = max( n_add_samples_size, 0)
+            samples_sizes[i]  += n_add_samples_size
+            n_diff              -= n_add_samples_size
+            i                   += 1
+
+        print 'nsamples:', nsamples
+        print 'nsamples actual:', np.sum( samples_sizes )
+        print 'n_samples_size:', n_samples_size
+        print 'sample sizes:', samples_sizes
+        print 'len samples:', len(samples_sizes)
+        print '#samples: ', np.sum(samples_sizes)
+        print '#actual:', np.sum( [ len(c)/2 for c in annotations ] )
+
+        #n_samples = 0
+        #for coordinates in annotations:
+        #    n_samples += len(coordinates)/2
+
+        mode   = 'symmetric'
+        patchSize = project.patchSize
+        pad = patchSize
+        img = mahotas.imread( imgPath )
+        img = np.pad(img, ((pad, pad), (pad, pad)), mode)
+        img = Utility.normalizeImage(img)
+
+        whole_set_patches = np.zeros((n_total, patchSize*patchSize), dtype=np.float)
+        whole_set_labels = np.zeros(n_total, dtype=np.int32)
+
+        border_patch = np.ceil(patchSize/2.0)
+
+        counter = 0
+        for label, coordinates in enumerate( annotations ):
+
+            ncoordinates = len(coordinates)
+
+            indices = np.random.choice( ncoordinates, samples_sizes[label], replace=False)
+ 
+            n_label_samples = 0
+            #for i in range(0, ncoordinates, 2):
+            for i in indices:
+                if i%2 == 1:
+                    i = i-1
+
+                #if n_label_samples > samples_sizes[label]:
+                #    break
+
+                n_label_samples += 1
+
+                col = coordinates[i]
+                row = coordinates[i+1]
+                r1  = row+patchSize-border_patch
+                r2  = row+patchSize+border_patch+1
+                c1  = col+patchSize-border_patch
+                c2  = col+patchSize+border_patch+1
+
+                imgPatch = img[r1:r2,c1:c2]
+                imgPatch = skimage.transform.rotate(imgPatch, random.choice(xrange(360)))
+                imgPatch = imgPatch[0:patchSize,0:patchSize]
+
+                if random.random() < 0.5:
+                    imgPatch = np.fliplr(imgPatch)
+
+                whole_set_patches[counter,:] = imgPatch.flatten()
+                whole_set_labels[counter] = label
+                counter += 1
+
+        print '#samples:', whole_set_patches.shape
+        print 'counter :', counter
+
+        whole_data = np.float32(whole_set_patches)
+        if data_mean == None:
+            whole_data_mean = np.mean(whole_data,axis=0)
+        else:
+            whole_data_mean = data_mean
+
+        whole_data = whole_data - np.tile(whole_data_mean,(np.shape(whole_data)[0],1))
+        if data_std == None:
+            whole_data_std = np.std(whole_data,axis=0)
+        else:
+            whole_data_std = data_std
+
+        whole_data_std = np.clip(whole_data_std, 0.00001, np.max(whole_data_std))
+        whole_data = whole_data / np.tile(whole_data_std,(np.shape(whole_data)[0],1))
+
+        return whole_data, whole_set_labels
+
+
+
+    def gen_samples_old(self, project, imageId, nsamples):
+
+        data_mean=project.mean
+        data_std=project.std
+    
+        annPath = '%s/%s.%s.json'%(Paths.Labels, imageId, project.id)
+        imgPath = '%s/%s.tif'%(Paths.TrainGrayscale, imageId)
+
+        print annPath
+        print imgPath
+
+        if not os.path.exists(annPath) or not os.path.exists( imgPath):
+            return False
+   
+         
+        with open(annPath) as json_file: 
+            annotations = json.load( json_file )
+
+        nsamples = 0
+        for coordinates in annotations:
+            nsamples += len(coordinates)/2
+
+        mode   = 'symmetric'
+        patchSize = project.patchSize
+        pad = patchSize
+        img = mahotas.imread( imgPath )
+        img = np.pad(img, ((pad, pad), (pad, pad)), mode)
+        img = Utility.normalizeImage(img)
+
+        whole_set_patches = np.zeros((nsamples, patchSize*patchSize), dtype=np.float)
+        whole_set_labels = np.zeros(nsamples, dtype=np.int32)
+
+        border_patch = np.ceil(patchSize/2.0)
+
+        counter = 0
+        for label, coordinates in enumerate( annotations ):
+
+            ncoordinates = len(coordinates)
+
+            for i in range(0, ncoordinates, 2):
+
+                col = coordinates[i]
+                row = coordinates[i+1]
+                r1  = row+patchSize-border_patch
+                r2  = row+patchSize+border_patch+1
+                c1  = col+patchSize-border_patch
+                c2  = col+patchSize+border_patch+1
+
+                imgPatch = img[r1:r2,c1:c2]
+                imgPatch = skimage.transform.rotate(imgPatch, random.choice(xrange(360)))
+                imgPatch = imgPatch[0:patchSize,0:patchSize]
+
+                if random.random() < 0.5:
+                    imgPatch = np.fliplr(imgPatch)
+
+                whole_set_patches[counter,:] = imgPatch.flatten()
+                whole_set_labels[counter] = label
+                counter += 1
+
+
+        print '#samples:', whole_set_patches.shape
+        print 'counter :', counter
+
+        whole_data = np.float32(whole_set_patches)
+        if data_mean == None:
+            whole_data_mean = np.mean(whole_data,axis=0)
+        else:
+            whole_data_mean = data_mean
+
+        whole_data = whole_data - np.tile(whole_data_mean,(np.shape(whole_data)[0],1))
+        if data_std == None:
+            whole_data_std = np.std(whole_data,axis=0)
+        else:
+            whole_data_std = data_std
+
+        whole_data_std = np.clip(whole_data_std, 0.00001, np.max(whole_data_std))
+        whole_data = whole_data / np.tile(whole_data_std,(np.shape(whole_data)[0],1))
+
+        return whole_data, whole_set_labels
+
+
+
