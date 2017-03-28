@@ -9,7 +9,7 @@ if [ ! -d "code/web/resources" ]; then
 fi
 
 cd code/web/resources
-rm output labels train validate
+rm -rf output labels train validate
 ln -s ../../../data/train train
 ln -s ../../../data/valid validate
 ln -s ../../../data/segmentation output
