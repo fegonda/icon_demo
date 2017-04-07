@@ -35,7 +35,7 @@ from project import Project
 from mlp import MLP 
 #from mlp_offline import MLP_Offline
 from cnn import CNN
-from unet import UNET
+#from unet import UNET
 #from cnn_offline import CNN_Offline
 from utility import Utility
 from paths import Paths
@@ -69,11 +69,8 @@ class Manager(threading.Thread):
         if not self.online:
             path = project.path_offline
 
-        print 'aaaaa'
-        if project.type != Project.UNET and  not self.can_load_model(path):
-            return
-
-        print 'bbbbb'
+        #if project.type != Project.UNET and  not self.can_load_model(path):
+        #    return
 
         if project.type == Project.MLP:
 
@@ -104,9 +101,8 @@ class Manager(threading.Thread):
                         path=path,
                         id=project.id)
 
-
-        elif project.type == Project.UNET:
-                self.model = UNET( project )
+        #elif project.type == Project.UNET:
+        #        self.model = UNET( project )
 
         self.dataset = Data( project )
 

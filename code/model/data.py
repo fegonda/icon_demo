@@ -36,11 +36,14 @@ import tifffile as tiff
 
 base_path = os.path.dirname(__file__)
 sys.path.insert(1,os.path.join(base_path, '../common'))
+sys.path.insert(1,os.path.join(base_path, '../../'))
 
 from utility import Utility
 from settings import Paths
 from project import Project
 from db import DB
+from h5data import H5Data
+from config import *
 
 class Entry:
     def __init__(self, name, offset, length):
@@ -131,6 +134,7 @@ class Data:
         Utility.report_status('.', '.')
 
     def valid(self): 
+        print 'y size:', len(self.y)
         return len(self.y) > (Data.TrainSuperBatchSize + Data.ValidSuperBatchSize) 
 
     def get_pixel_count(self, project):
@@ -288,6 +292,8 @@ class Data:
         first_time = (len(self.entries) == 0)
         images     = DB.getTrainingImages( self.project.id, new=(not first_time) )
         imgs = DB.getImages( self.project.id )
+
+        print imgs
 
         # bailout if there's no images to train.
         if len(images) == 0:
@@ -650,10 +656,9 @@ class Data:
         data_std=project.std
 
         annPath = '%s/%s.%s.json'%(Paths.Labels, imageId, project.id)
-        imgPath = '%s/%s.tif'%(grayPath, imageId)
-
-        if not os.path.exists(annPath) or not os.path.exists( imgPath):
-            return [], [], 0, 0
+        #imgPath = '%s/%s.tif'%(grayPath, imageId)
+        #if not os.path.exists(annPath) or not os.path.exists( imgPath):
+        #    return [], [], 0, 0
 
         with open(annPath) as json_file:
             annotations = json.load( json_file )
@@ -705,7 +710,9 @@ class Data:
         patchSize = project.patchSize
         pad = patchSize
 
-        img = tiff.imread( imgPath )
+        #img = tiff.imread( imgPath )
+        p_h5data = '../../data/%s'%(data_stack_file)
+        imgPath = get_slice(p_h5data, data_stack_name,imageId)
         img = np.pad(img, ((pad, pad), (pad, pad)), mode)
         img = Utility.normalizeImage(img)
 

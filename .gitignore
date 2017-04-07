@@ -1,3 +1,4 @@
+*.pyc
 code/partition-comparison/build
 code/model/cnn/*.pyc
 code/model/mlp/*.pyc
