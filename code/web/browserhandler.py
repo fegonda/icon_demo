@@ -35,7 +35,7 @@ from h5data import H5Data
 from PIL import Image
 
 DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
-DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_PATH = os.path.join(base_path, '../../data')
 DATA_NAME = 'main'
 
 
@@ -103,7 +103,7 @@ class BrowseHandler(tornado.web.RequestHandler):
         #data['num_slices']    = H5Data.getSliceCount()
         #data['num_slices'] = self.getSliceCount()
 
-        data['num_slices'] = H5Data.getSliceCount('%s/im_uint8.h5'%(Paths.Data))
+        data['num_slices'] = H5Data.getSliceCount(Paths.Data)
 
         if project == None and len(data['names']) > 0:
             project  = DB.getProject( data['names'][0] )

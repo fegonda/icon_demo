@@ -13,23 +13,25 @@ import json
 
 
 base_path = os.path.dirname(__file__)
-sys.path.insert(2,os.path.join(base_path, '../common'))
-sys.path.insert(2,os.path.join(base_path, '../database'))
+sys.path.insert(0,os.path.join(base_path, '../common'))
+sys.path.insert(0,os.path.join(base_path, '../database'))
+sys.path.insert(0,os.path.join(base_path, '../../'))
 
 from paths import Paths
 from db import DB
+from config import *
 
 class H5Data:
     def __init__(self, path=Paths.Data, name='main'):
         self.index = 0
-        self.path='%s/im_uint8.h5'%(path)
+        self.path='%s/%s'%(path,data_stack_file)
         print 'path:', self.path
         print 'isfile:', os.path.isfile(path)
         self.volume = np.array(h5py.File( path ,'r')[name],dtype=np.float32)/(2.**8)
 
     @staticmethod
     def getSliceCount(path, name='main'):
-        volume = np.array(h5py.File( path ,'r')[name],dtype=np.float32)/(2.**8)
+        volume = np.array(h5py.File( '%s/%s'%(path,data_stack_file) ,'r')[name],dtype=np.float32)/(2.**8)
         return volume.shape[0];
 
     @staticmethod
@@ -90,7 +92,7 @@ class H5Data:
     def generate_preview( pathH5data, name, pathLabels, pathSegmentation, pathImages, imageId, projectId ):
 
         # input image
-        volume = np.array(h5py.File( pathH5data ,'r')[name],dtype=np.float32)/(2.**8)
+        volume = np.array(h5py.File( '%s/%s'%(pathH5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
         image = volume[int(imageId),:,:]
         background = color.gray2rgb(image)*255
         background = background.astype(dtype=np.int8)
@@ -170,7 +172,8 @@ class H5Data:
         # print 'name:',name
         # print 'to:', p_image
         # print 'index:', imageIndex
-        volume = np.array(h5py.File( p_h5data ,'r')[name],dtype=np.float32)/(2.**8)
+
+        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
         for i in range(volume.shape[0]):
             image = volume[int(i),:,:]
             # image = color.gray2rgb( image )
@@ -181,8 +184,11 @@ class H5Data:
 
     @staticmethod
     def get_slice(p_h5data, name, index):
-        volume = np.array(h5py.File( p_h5data ,'r')[name],dtype=np.float32)/(2.**8)
-        return volume[int(index),:,:]
+        print 'path: ', '%s/%s'%(p_h5data,data_stack_file)
+        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)
+        image = volume[int(index),:,:]
+        print np.min(image), np.max(image)
+        return image
 
     def get_pair(self, index1, index2):
         img1 = self.volume[self.index1,:,:]

@@ -19,7 +19,7 @@ sys.path.insert(2,os.path.join(base_path, '../database'))
 
 DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
 DATA_PATH_SEGMENTATION = os.path.join(base_path, '../../data/segmentation')
-DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_PATH = os.path.join(base_path, '../../data')
 DATA_PATH_LABELS = os.path.join(base_path, '../../data/labels')
 DATA_NAME = 'main'
 
@@ -113,7 +113,16 @@ class AnnotationHandler(tornado.web.RequestHandler):
 
     def getimage(self, imageId, projectId):
         image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
+
+        print '----values'
+        print np.min(image), np.max(image)
+
         image = Image.fromarray(np.uint8(image*255))
+        a = np.array(image)
+        
+        print np.min(a), np.max(a)
+        print a
+
         output = StringIO.StringIO()
         image.save(output, 'TIFF')
         return output.getvalue()

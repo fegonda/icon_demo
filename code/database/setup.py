@@ -42,7 +42,7 @@ from h5data import H5Data
 DATABASE_NAME = os.path.join(base_path, '../../data/database/icon.db')
 
 DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
-DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_PATH = os.path.join(base_path, '../../data')
 DATA_NAME = 'main'
 
 
