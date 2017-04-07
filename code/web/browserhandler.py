@@ -21,6 +21,8 @@ import sys
 import re
 import glob
 import json
+import StringIO
+import numpy as np
 
 base_path = os.path.dirname(__file__)
 sys.path.insert(1,os.path.join(base_path, '../common'))
@@ -29,12 +31,26 @@ sys.path.insert(2,os.path.join(base_path, '../database'))
 from utility import Utility
 from paths import Paths
 from db import DB
+from h5data import H5Data
+from PIL import Image
+
+DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
+DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_NAME = 'main'
+
 
 class BrowseHandler(tornado.web.RequestHandler):
 
+
+    # def __init__(self):
+    #     self.requestcount = 0;
+
     def get(self):
+        #self.requestcount += 1
+
         print ('-->BrowseHandler.get...' + self.request.uri)
         print (self.request.uri )
+        #print ('requestcount: ' + self.requestcount )
         tokens = self.request.uri.split(".")
         print tokens
 
@@ -42,6 +58,11 @@ class BrowseHandler(tornado.web.RequestHandler):
             print 'getting images...'
             self.set_header('Content-Type', 'text')
             self.write(self.getimages( tokens[2] ))
+
+        elif len(tokens) > 2 and tokens[1] == 'getpreview':
+            self.set_header('Content-Type', 'image/tiff')
+            self.write(self.getimage( tokens[2] ))
+
 
         elif len(tokens) > 2 and tokens[1] == 'getprojectsdata':
             print 'getprojectsdata...'
@@ -57,30 +78,44 @@ class BrowseHandler(tornado.web.RequestHandler):
 
     def post(self):
         print ('-->BrowseHandler.post...', self.request.uri)
-	tokens = self.request.uri.split(".")
-	if len(tokens) > 2 and tokens[1] == 'stop':
-	    DB.stopProject( tokens[2] )
-	elif len(tokens) > 2 and tokens[1] == 'start':
-	    DB.startProject( tokens[2] )
+        tokens = self.request.uri.split(".")
+        if len(tokens) > 2 and tokens[1] == 'stop':
+            DB.stopProject( tokens[2] )
+        elif len(tokens) > 2 and tokens[1] == 'start':
+            DB.startProject( tokens[2] )
+
+
+    def getimage(self, imageId):
+        image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
+        image = Image.fromarray(np.uint8(image*255))
+        image.thumbnail((525,525), Image.ANTIALIAS)
+        output = StringIO.StringIO()
+        image.save(output, 'TIFF')
+        return output.getvalue()
+
 
     def getProjectsData(self, projectId):
         print 'browse.getProjectEditData'
 
-	project          = DB.getProject( projectId )
+        project          = DB.getProject( projectId )
         data             = {}
         data['names']    = DB.getProjectNames()
+        #data['num_slices']    = H5Data.getSliceCount()
+        #data['num_slices'] = self.getSliceCount()
+
+        data['num_slices'] = H5Data.getSliceCount('%s/im_uint8.h5'%(Paths.Data))
 
         if project == None and len(data['names']) > 0:
-		project  = DB.getProject( data['names'][0] )
+            project  = DB.getProject( data['names'][0] )
 
-	active           = DB.getActiveProject()
+        active           = DB.getActiveProject()
         data['project']  = project.toJson()
-	#DB.getProject( projectId ).toJson()
+        #DB.getProject( projectId ).toJson()
         #data['images']   = [ i.toJson() for i in DB.getImages( projectId ) ]
         #data['offline']  = DB.getOfflinePerformance( projectId )
-	#data['online']   = DB.getOnlinePerformance( projectId )
-	#data['baseline'] = DB.getBaselinePerformance( projectId )
-	data['active']   = active.toJson() if active is not None else {}
+        #data['online']   = DB.getOnlinePerformance( projectId )
+        #data['baseline'] = DB.getBaselinePerformance( projectId )
+        data['active']   = active.toJson() if active is not None else {}
 
         return Utility.compress( json.dumps( data ) )
 

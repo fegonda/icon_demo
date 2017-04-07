@@ -130,7 +130,7 @@ define(['jquery', 'tiff'], function($,Tiff){
     tokens = tokens[ tokens.length -1 ].split(".");
     console.log(tokens);
 
-    return (tokens.length > 1 ? tokens[ 2 ] : null);
+    return (tokens.length > 1 ? tokens[ 1 ] : null);
   }
 
 

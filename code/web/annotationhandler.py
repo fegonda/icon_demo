@@ -9,16 +9,25 @@ import StringIO
 import base64
 import numpy as np;
 import json
+import h5py
+from PIL import Image
 from datetime import datetime, date
 
 base_path = os.path.dirname(__file__)
 sys.path.insert(1,os.path.join(base_path, '../common'))
 sys.path.insert(2,os.path.join(base_path, '../database'))
 
+DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
+DATA_PATH_SEGMENTATION = os.path.join(base_path, '../../data/segmentation')
+DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_PATH_LABELS = os.path.join(base_path, '../../data/labels')
+DATA_NAME = 'main'
 
 from db import DB
 from paths import Paths
 from utility import Utility;
+from h5data import H5Data
+
 
 class AnnotationHandler(tornado.web.RequestHandler):
 
@@ -28,13 +37,32 @@ class AnnotationHandler(tornado.web.RequestHandler):
         print ('-->AnnotationHandler.get...' + self.request.uri)
         #self.__logic.handle( self );
         tokens  = self.request.uri.split(".")
+        #typeId = tokens[1]
         imageId = tokens[1]
         projectId = tokens[2]
-        action  = None if (len(tokens) < 4) else tokens[3]
+        action  = None 
+        if (len(tokens) >= 4):
+            action = tokens[3]
+
+        purpose = tokens[1]
+        if (purpose =='train' or purpose=='valid'):
+            imageId = tokens[2]
+            projectId = tokens[3]
 
         if action == 'getlabels':
             self.set_header('Content-Type', 'text')
             self.write(self.getLabels( imageId, projectId ))
+        elif action == 'getimage':
+            self.set_header('Content-Type', 'image/tiff')
+            self.write(self.getimage( imageId, projectId ))
+        elif action == 'setimagepurpose':
+            self.setimagepurpose( imageId, projectId, purpose)
+            # self.set_header('Content-Type', 'image/tiff')
+            # self.write(self.setimagepurpose( imageId, projectId, purpose))
+
+        # elif action == 'getpreviewimage':
+        #     self.set_header('Content-Type', 'image/jpeg')
+        #     self.write(self.getimage( imageId, projectId ))
         elif action == 'getuuid':
             #uuid.uuid1()
             guid = tokens[4]
@@ -53,20 +81,55 @@ class AnnotationHandler(tornado.web.RequestHandler):
             self.set_header('Content-Type', 'application/octstream')
             self.write(self.getstatus( imageId, projectId, guid, segTime ))
         else:
+            print 'rendering html....'
+            #self.renderimage( projectId, imageId, purpose )
             self.render("annotate.html")
+
+            
 
     def post(self):
         print ('-->AnnotationHandler.post...' + self.request.uri)
         tokens  = self.request.uri.split(".")
-        imageId = tokens[1]
-        projectId = tokens[2]
-        action  = None if (len(tokens) < 4) else tokens[3]
+        action=tokens[1]
+        # imageId = tokens[1]
+        # projectId = tokens[2]
+        #action  = None if (len(tokens) < 4) else tokens[3]
 
         print 'action: ', action
         if action == 'saveannotations':
             data = self.get_argument("annotations", default=None, strip=False)
             imageId = self.get_argument("id", default=None, strip=False)
+            projectId = self.get_argument("projectid", default=None, strip=False)
+            print 'projectId:', projectId
+            print 'imageId:',imageId
             self.saveannotations(imageId, projectId, data)
+        elif action == 'setpurpose':
+            print( 'set image purpose')
+            purpose = self.get_argument("purpose", default=None, strip=False)
+            imageId = self.get_argument("id", default=None, strip=False)
+            projectId = self.get_argument("projectid", default=None, strip=False)
+            DB.addImage(projectId, imageId, purpose)
+
+
+    def getimage(self, imageId, projectId):
+        image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
+        image = Image.fromarray(np.uint8(image*255))
+        output = StringIO.StringIO()
+        image.save(output, 'TIFF')
+        return output.getvalue()
+
+    # def getpreviewimage(self, imageId, projectId):
+    #     image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
+    #     image = Image.fromarray(np.uint8(image*255))
+    #     output = StringIO.StringIO()
+    #     image.save(output, 'JPEG')
+    #     return output.getvalue()
+
+
+    def renderimage(self, projectId, imageId, purpose):
+        H5Data.extract_to(DATA_PATH, DATA_NAME, DATA_PATH_IMAGES, projectId, imageId, purpose )
+
+        self.render("annotate.html")
 
     def close(self, signal, frame):
         print ('Saving..')
@@ -136,6 +199,8 @@ class AnnotationHandler(tornado.web.RequestHandler):
 
         # Add a training and prediction task to the database
         DB.saveAnnotations( projectId, imageId, path )
+
+        H5Data.generate_preview( DATA_PATH, DATA_NAME, DATA_PATH_LABELS, DATA_PATH_SEGMENTATION, DATA_PATH_IMAGES, imageId, projectId )
 
         print '---->>>>>training images for :',projectId
         images = DB.getTrainingImages( projectId )

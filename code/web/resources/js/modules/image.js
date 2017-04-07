@@ -5,9 +5,12 @@ function( Zlib, Util )
   {
     this.id = imageId;
     this.project = project;
-    this.url = '/' + purpose + '/' + this.id + '.tif';
+    //this.url = '/' + purpose + '/' + this.id + '.tif';
+    //this.url = '/input/' + this.id + '.tif';
+    this.url = '/annotate.' + this.id + '.' + this.project.id + '.getimage'
     this.labels_url = '/annotate.' + this.id + '.' + this.project.id + '.getannotations'
-    this.labels_save_url = '/annotate.' + this.id + '.' + this.project.id + '.saveannotations'
+    //this.labels_save_url = '/annotate.' + this.id + '.' + this.project.id + '.saveannotations'
+    this.labels_save_url = '/annotate.saveannotations'
     this.segmentation_url = '/annotate.' + this.id + '.' + this.project.id + '.getsegmentation'
     this.status_url = '/annotate.' + this.id + '.' + this.project.id + '.getstatus'
 
@@ -53,6 +56,7 @@ function( Zlib, Util )
 
   Image.prototype.onAnnotationsLoaded = function(res)
   {
+    console.log(res);
     var compressed = new Uint8Array(res.response);
     var inflate = new Zlib.Inflate(compressed);
     var binary = inflate.decompress();
@@ -69,7 +73,10 @@ function( Zlib, Util )
 
   Image.prototype.save = function(label) {
     input = JSON.stringify(this.annotations);
-    Util.send_data(this.labels_save_url, 'id=' + this.id + ';annotations='+input);
+    console.log("-------save-------");
+    console.log(this.project);
+    console.log(this.project.id);
+    Util.send_data(this.labels_save_url, 'id=' + this.id + ';projectid='+ this.project.id+ ';annotations='+input);
   }
 
   return Image;

@@ -55,26 +55,26 @@ button:focus {
 }
 
 .toolbar_button {
-  background-color: rgba(255, 255, 255, 0.2504);
+  background-color: rgba(255, 255, 255, 0.9504);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 0px;
-  height: 32px;
-  width: 32px;
+  height: 30px;
+  width: 30px;
   margin: 1px;
   abackground: rgba(255,183,165,0.1350);
 }
 
 .browser_button {
-  margin-top: 4px;
+  margin-top: 1px;
 }
 
 
 .save_button {
-  background: url("../images/save.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/save.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .browse_button {
-  background: url("../images/browser_on.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/browser_on.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .browse_button_big {
@@ -84,7 +84,7 @@ button:focus {
 }
 
 .help_button {
-  background: url("../images/help.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/help.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .prev_button {
@@ -96,43 +96,78 @@ button:focus {
 }
 
 .add_button {
-  background: url("../images/plus.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/plus.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .duplicate_button {
-  background: url("../images/duplicate.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/duplicate.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .edit_button {
-  background: url("../images/edit.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/edit.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .delete_button {
-  background: url("../images/delete.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/delete.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
+.train_button {
+  background: rgba(255,183,165,0.9350);
+  color: rgba(0,0,0,1);
+  font-size: 14px;
+  afont-weight: bold;
+  padding-bottom: 0px;
+  width: 150px;
+  height: 30px;
+
+}
+
+.valid_button {
+  background: rgba(255,183,165,0.9350);
+  color: rgba(0,0,0,1);
+  abackground: rgba(255,0,0,0.6);
+  font-size: 14px;
+  afont-weight: bold;
+  padding-bottom: 0px;
+  width: 150px;
+  height: 30px;
+}
+
+.edit_slice_button {
+  background: rgba(255,183,165,0.9350);
+  color: rgba(0,0,0,1);
+  abackground: rgba(255,0,0,0.6);
+  font-size: 14px;
+  afont-weight: bold;
+  padding-bottom: 0px;
+  width: 150px;
+  height: 30px;
+}
+
+
+
 .stop_button {
-  background: rgba(255,0,0, 0.35);
+  background: rgba(255,0,0, 0.9350);
 }
 
 .segmentation_button {
-  background: url("../images/segmentation.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/segmentation.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .annotation_button {
-  background: url("../images/labels.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/labels.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .brush_button {
-  background: url("../images/brush.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/brush.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .erase_button {
-  background: url("../images/eraser.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/eraser.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .select_button {
-  background: url("../images/select.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.1350);
+  background: url("../images/select.svg") no-repeat scroll 0% 0% rgba(255,183,165,0.9350);
 }
 
 .float_left {
@@ -179,10 +214,10 @@ button:focus {
     border:0;
     outline:0;
     -webkit-transition:0.3s ease all;
-  	   -moz-transition:0.3s ease all;
-  	    -ms-transition:0.3s ease all;
-  	     -o-transition:0.3s ease all;
-  	        transition:0.3s ease all;
+       -moz-transition:0.3s ease all;
+        -ms-transition:0.3s ease all;
+         -o-transition:0.3s ease all;
+            transition:0.3s ease all;
 
 }
 
@@ -197,34 +232,34 @@ button:focus {
 
 
 #confirmation {
-	position: absolute;
-	z-index: 100;
-	width: 820px;
-	height: 300px;
+  position: absolute;
+  z-index: 100;
+  width: 820px;
+  height: 300px;
   margin-left: 72px;
-	border: 1px solid rgba(255,255,255,0.35);
-	background: rgba(81, 33, 33, 1);
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(81, 33, 33, 1);
   abackground-image: url(../images/module_light.png);
   box-shadow: 0 8px 4px -4px rgba(44,12,12,0.5);
-	left: 60px;
+  left: 60px;
   color: rgba(255,255,255,0.45);
 }
 
 #confirmation div {
-	padding: 25px;
+  padding: 25px;
 }
 
 #confirmation div span {
-	text-align: left;
+  text-align: left;
 }
 
 #confirmation button {
-	width: 100px;
+  width: 100px;
 }
 
 #confirmation hr {
-	border: 1px solid rgba(255,255,255,0.15);
-	margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  margin-bottom: 20px;
 }
 
 .locked {

@@ -11,24 +11,9 @@ function($, Zlib, Util, Project){
     this.projectnames = [];
 
     this.confirmation = document.getElementById("confirmation");
-    this.addimages = document.getElementById("addimages");
-    this.removeimages = document.getElementById("removeimages");
-    this.addimages.addEventListener("click", this.onAddImages.bind(this));
-    this.removeimages.addEventListener("click", this.onRemoveImages.bind(this));
-
-
-    // validation set controls
-    this.add_validation_images = document.getElementById("add_validation_images");
-    this.remove_validation_images = document.getElementById("remove_validation_images");
-    this.add_validation_images.addEventListener("click", this.onAddValidationImages.bind(this));
-    this.remove_validation_images.addEventListener("click", this.onRemoveValidationImages.bind(this));
-
+ 
     this.project_name = document.getElementById("project_name");
-    this.projectimages = document.getElementById("projectimages");
-    this.availableimages = document.getElementById("availableimages");
-
-    this.validation_images_listbox = document.getElementById("validation_images_listbox");
-    this.available_validation_images_listbox = document.getElementById("available_validation_images_listbox");
+ 
 
     this.project_name = document.getElementById("project_name");
     this.modeltypeselector = document.getElementById("modeltypeselector");
@@ -72,8 +57,6 @@ function($, Zlib, Util, Project){
     //this.epochs.addEventListener('input', this.validateNumber.bind(this));
     //this.train_time.addEventListener('input', this.validateNumber.bind(this));
 
-    this.images = [];
-    this.validation_images = [];
     this.browser_button.addEventListener("click", this.onBrowse.bind(this), false);
 
     this.toggleConfirmation( false );
@@ -113,66 +96,6 @@ function($, Zlib, Util, Project){
 
   }
 
-  ProjectEditor.prototype.onAddImages = function()
-  {
-    console.log('ProjectEditor.prototype.addImages');
-    this.transferImages( this.availableimages, this.projectimages );
-  }
-
-  ProjectEditor.prototype.onRemoveImages = function()
-  {
-    console.log('ProjectEditor.prototype.removeImages');
-    this.transferImages( this.projectimages, this.availableimages );
-  }
-
-
-    ProjectEditor.prototype.onAddValidationImages = function()
-    {
-      console.log('ProjectEditor.prototype.onAddValidationImages');
-      this.transferImages( this.available_validation_images_listbox, this.validation_images_listbox );
-    }
-
-    ProjectEditor.prototype.onRemoveValidationImages = function()
-    {
-      console.log('ProjectEditor.prototype.onRemoveValidationImages');
-      this.transferImages( this.validation_images_listbox, this.available_validation_images_listbox );
-    }
-
-  ProjectEditor.prototype.transferImages = function(srcListbox, dstListbox)
-  {
-    console.log('ProjectEditor.prototype.transferImages');
-    var options = [];
-    var option;
-
-    for(var i=0; i<srcListbox.options.length; i++) {
-      options.push( srcListbox.options[i].selected );
-    }
-
-    var count = options.length;
-    while(count--) {
-      var option = srcListbox[count];
-      if (option.selected) {
-        console.log(option);
-        srcListbox.remove( count );
-        dstListbox.add( option );
-      }
-    }
-
-  }
-
-  ProjectEditor.prototype.fillListbox = function(images,listbox)
-  {
-    var image;
-    var options = listbox.options;
-    while(options.length > 0) {
-      listbox.remove(options[0]);
-    }
-    for(var i=0; i<images.length; i++) {
-      option = document.createElement("option");
-      option.text = images[i].image_id;
-      listbox.add(option);
-    }
-  }
 
   ProjectEditor.prototype.loadData = function()
   {
@@ -193,55 +116,16 @@ function($, Zlib, Util, Project){
     data = JSON.parse( window.atob(decompressed) ); // decode the string
 
     console.log(data);
-    this.images = data.images;
-    this.validation_images = data.validation_images;
 
     this.project = new Project( data.project );
     console.log('project....');
     console.log(this.project);
     this.projectnames = data.projectnames;
 
-    // var names = [];
-    // for(var i=0; i<this.project.images.length; i++) {
-    //   names.push(this.project.images[i].image_id);
-    // }
-    //
-    // var count = this.images.length;
-    // while(count--) {
-    //   if ( names.indexOf(this.images[count].image_id) > -1 ) {
-    //     this.images.splice(count,1);
-    //   }
-    // }
-
-    this.ensureUniqueImages( this.project.images, this.images );
-    this.ensureUniqueImages( this.project.validation_images, this.validation_images );
-
-
-    this.fillListbox( this.images, this.availableimages );
-    this.fillListbox( this.validation_images, this.available_validation_images_listbox );
-
     this.setupProject();
 
     Util.closeLoadingScreen();
   }
-
-  ProjectEditor.prototype.ensureUniqueImages = function(srcImages, dstImages)
-  {
-    console.log('ProjectEditor.prototype.ensureUniqueImages');
-
-    var names = [];
-    for(var i=0; i<srcImages.length; i++) {
-        names.push(srcImages[i].image_id);
-    }
-
-    var count = dstImages.length;
-    while(count--) {
-        if ( names.indexOf(dstImages[count].image_id) > -1 ) {
-          dstImages.splice(count,1);
-        }
-    }
-  }
-
 
   ProjectEditor.prototype.onFormSubmit = function(event)
   {
@@ -309,9 +193,6 @@ function($, Zlib, Util, Project){
   {
     console.log('ProjectEditor.prototype.onProjectLoaded');
     console.log( this.project );
-    this.fillListbox(this.project.images, this.projectimages);
-    this.fillListbox(this.project.validation_images, this.validation_images_listbox)
-
     console.log('ProjectEditor.prototype.onProjectLoaded');
 
     var initialmodel = '';
@@ -363,9 +244,6 @@ function($, Zlib, Util, Project){
     var cell = row.cells[ row.cells.length -1 ];
     cell.removeChild(this.deletelabel_button);
 
-
-    // load the images
-    //this.loadProjectsAndImages();
   }
 
   ProjectEditor.prototype.onTypeChanged = function(e) {
@@ -588,31 +466,6 @@ console.log('------labels');
       console.log('name:' + name);
       console.log('label_index:' + label_index);
     }
-
-    this.project.images = [];
-    for(var i=0; i<this.projectimages.options.length; i++) {
-      var image =  {
-        ann_file: '',
-        image_id: this.projectimages.options[i].value,
-        project_id: this.project.name,
-        score: 0.0,
-        seg_file: ''
-      };
-      this.project.images.push( image );
-    }
-
-    this.project.validation_images = [];
-    for(var i=0; i<this.validation_images_listbox.options.length; i++) {
-      var image =  {
-        ann_file: '',
-        image_id: this.validation_images_listbox.options[i].value,
-        project_id: this.project.name,
-        score: 0.0,
-        seg_file: ''
-      };
-      this.project.validation_images.push( image );
-    }
-
 
 
     console.log(this.project);

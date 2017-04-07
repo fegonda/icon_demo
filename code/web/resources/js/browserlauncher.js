@@ -7,6 +7,7 @@ requirejs.config({
         tiff: 'vendors/tiff.min',
         zlib: 'vendors/zlib.min',
         util:  'modules/util',
+        scrollbar: 'modules/scrollbar',
 /*
         opentip: 'vendors/opentip-native.min',
         layer: 'modules/layer',

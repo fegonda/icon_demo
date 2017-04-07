@@ -45,6 +45,7 @@ class Image (object):
     def toJson(self):
         data = {}
         data['image_id']              = self.id
+        data['purpose']               = self.purpose
         data['training_time']         = self.trainingTime
         data['training_status']       = self.trainingStatus
         data['training_score']        = self.trainingScore

@@ -20,6 +20,11 @@ import json
 import glob
 import time
 import uuid
+import h5py
+
+import h5py
+from PIL import Image
+
 
 from datetime import datetime, date
 
@@ -31,8 +36,15 @@ from paths import Paths
 from tables import Tables
 from project import Project
 from db import DB
+from h5data import H5Data
+
 
 DATABASE_NAME = os.path.join(base_path, '../../data/database/icon.db')
+
+DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
+DATA_PATH = os.path.join(base_path, '../../data/im_uint8.h5')
+DATA_NAME = 'main'
+
 
 def install(project):
     # remove any existing model files associated with this project
@@ -84,6 +96,10 @@ def install(project):
 if __name__ == '__main__':
     print 'Icon database (installation interface)'
 
+    # extract H5Data
+    H5Data.extract_all(DATA_PATH, DATA_NAME, DATA_PATH_IMAGES)
+
+
     # start in a blank slate
     Tables.drop();
 
@@ -107,3 +123,5 @@ if __name__ == '__main__':
     cnn.kernelSizes  = [5,5]
     cnn.hiddenUnits  = [200]
     install( cnn )
+
+

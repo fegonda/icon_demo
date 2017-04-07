@@ -56,6 +56,24 @@ class DB:
     QueryImage   += "ModelModifiedTime, CreationTime, StartTime "
     QueryImage   += "FROM ImageView "
 
+    PURPOSE_TRAIN_STR = 'train'
+    PURPOSE_VALID_STR = 'valid'
+    PURPOSE_NONE_STR = ''
+
+    PURPOSE_TRAIN_INT = 0
+    PURPOSE_VALID_INT = 1
+    PURPOSE_NONE_INT = 2
+
+    @staticmethod
+    def addImage(projectId, imageIndex, purpose):
+        connection = lite.connect( DATABASE_NAME, timeout=30)
+        with connection:
+            cur  = connection.cursor()
+            cmd  = "INSERT INTO Image(ProjectId, ImageId, Purpose) "
+            cmd += "VALUES(?,?,?)"
+            vals = (projectId, imageIndex, DB.purpose_str_to_int(purpose))
+            cur.execute( cmd, vals )
+
     #--------------------------------------------------------------------------------
     # BATCH
     #--------------------------------------------------------------------------------
@@ -139,13 +157,31 @@ class DB:
         project.nKernels         = DB.getNumKernels( id, type )
         project.kernelSizes      = DB.getKernelSizes( id, type )
         project.hiddenUnits      = DB.getHiddenUnits( id, type )
-        project.images           = DB.getImages( id, purpose=0 )
-        project.validation_images= DB.getImages( id, purpose=1 )
+        project.images           = DB.getAllImages( id )
+        #project.validation_images= DB.getImages( id, purpose=1 )
         project.offline          = DB.getOfflinePerformance( id )
         project.online           = DB.getOnlinePerformance( id )
         project.baseline         = DB.getBaselinePerformance( id )
         project.stats            = DB.getTrainingStats( id )
         return project
+
+    @staticmethod
+    def purpose_str_to_int(str):
+        if str == DB.PURPOSE_VALID_STR:
+            return DB.PURPOSE_VALID_INT
+        elif str == DB.PURPOSE_TRAIN_STR:
+            return DB.PURPOSE_TRAIN_INT
+        else:
+            return DB.PURPOSE_NONE_INT
+
+    @staticmethod
+    def purpose_int_to_str(i):
+        if i == DB.PURPOSE_VALID_INT:
+            return DB.PURPOSE_VALID_STR
+        elif i == DB.PURPOSE_TRAIN_INT:
+            return DB.PURPOSE_TRAIN_STR
+        else:
+            return DB.PURPOSE_NONE_STR
 
     @staticmethod
     def getProject(id):
@@ -461,6 +497,20 @@ class DB:
         return image
 
 
+    @staticmethod
+    def getAllImages(projectId):
+        images = []
+        connection = lite.connect( DATABASE_NAME, timeout=30)
+        with connection:
+            cur  = connection.cursor()
+            cmd  = DB.QueryImage
+            cmd += "WHERE ProjectId='%s'"%(projectId)
+            cur.execute( cmd )
+            results = cur.fetchall()
+            for result in results:
+                images.append( DB.toImage( result ) )
+        return images
+       
     # purpose (0=training,1=validation,2=test,3=all,4=annotated)
     @staticmethod
     def getImages(
@@ -470,6 +520,7 @@ class DB:
         new=False,
         trainingNew=False,
         segmentation=False):
+        purpose_str = DB.purpose_int_to_str(purpose)
         images = []
         connection = lite.connect( DATABASE_NAME, timeout=30)
         with connection:
@@ -487,7 +538,7 @@ class DB:
             if purpose == 3:
                 cmd += "ORDER BY TrainingScore DESC"
 
-            vals = (projectId, purpose)
+            vals = (projectId, purpose_str)
             cur.execute( cmd, vals )
             results = cur.fetchall()
             for result in results:

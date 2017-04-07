@@ -143,7 +143,7 @@ function($, Zlib, Util, Ruler, Project, Layer, Image, Toolbar){
 
   ImageViewer.prototype.onImageLoaded = function(tiff)
   {
-    //console.log('ImageViewer.prototype.onImageLoaded');
+    console.log('ImageViewer.prototype.onImageLoaded');
     var layer = this.layers[ LayerIndex.Background ];
     var canvas = tiff.toCanvas();
     var context = canvas.getContext("2d");

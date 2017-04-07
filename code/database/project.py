@@ -85,8 +85,9 @@ class Project (object):
     def addLabel(self, index, name, r, g, b):
         self.labels.append( Label(index, name, r, g, b) )
 
-    def addImage(self, imageId, annFile=None, segFile=None, score=0.0):
+    def addImage(self, imageId, annFile=None, segFile=None, score=0.0, purpose='train'):
         image = Image( imageId )
+        image.purpose = purpose
         image.annotationFile = annFile
         image.segmentationFile = segFile
         image.traningScore = score

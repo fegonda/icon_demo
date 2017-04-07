@@ -7,6 +7,9 @@ import time
 import signal
 # import datetime
 
+import h5py
+
+
 from datetime import datetime, date
 
 
@@ -22,6 +25,7 @@ sys.path.insert(1,os.path.join(base_path, '../common'))
 
 from utility import Utility
 from database import Database
+from paths import Paths
 
 MAX_WAIT_SECONDS_BEFORE_SHUTDOWN = 0.5
 
@@ -40,8 +44,9 @@ class Application(tornado.web.Application):
 			(r'/uikit/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/uikit/'}),
 			(r'/images/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/images/'}),
 			(r'/open-iconic/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/open-iconic/'}),
-            (r'/train/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/train/'}),
-            (r'/validate/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/validate/'}),
+            (r'/input/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/input/'}),
+            (r'/train/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/input/'}),
+            (r'/validate/(.*)', tornado.web.StaticFileHandler, {'path': 'resources/input/'}),
 			#(r"/annotate/(.*)", AnnotationHandler, dict(logic=self)),
 		]
 
@@ -53,13 +58,16 @@ class Application(tornado.web.Application):
 		tornado.web.Application.__init__(self, handlers, **settings)
 
 
+import numpy as np
 class Server():
     def __init__(self, name, port):
         self.name = name
         self.port = port
         application = Application()
         self.http_server = tornado.httpserver.HTTPServer( application )
-        self.ip = socket.gethostbyname( socket.gethostname() )
+        hostname = socket.gethostname()
+        print 'hostname:', hostname
+        self.ip = hostname #socket.gethostbyname( hostname )
 
     def print_status(self):
         Utility.print_msg ('.')

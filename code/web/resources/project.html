@@ -5,102 +5,58 @@
 	<meta charset="utf-8" />
 	<title>icon - interactive connectomics</title>
 	<link rel="stylesheet" href="css/load.css" />
-	<link rel="stylesheet" href="css/browser.css" />
-	<link rel="stylesheet" href="css/project.css" />
+<!-- 	<link rel="stylesheet" href="css/browser.css" />
+ -->	<link rel="stylesheet" href="css/project.css" />
 	<link rel="stylesheet" href="css/common.css">
+	<link rel="stylesheet" href="css/credit.css">
 	<script data-main="js/projectlauncher" src="js/vendors/require.js"></script>
 </head>
-<body>
+<body id='page'>
 	<div id="loader-wrapper">
 		<div id="loader"></div>
 		<div class="loader-section section-left"><p style="padding-top:540px; padding-right: 25px; float:right;">Loading,</p></div>
 		<div class="loader-section section-right"><p style="padding-top:540px; padding-left: 5px;"> please wait...</p></div>
 	</div>
 
-	  <div id="confirmation">
+	<div id="confirmation">
 
+		<div>
 			<div>
-				<div>
-					<h2 id="confirmation_title">Save Confirmation</h2>
-					<hr/>
-					<span id="confirmation_msg">
-						Click OK to save your changes and return to the project browser
-						screen or CANCEL to return to editing.
-					</span>
-				</div>
-				<div>
-					<center><button id="confirmok" class="toolbar_button">Ok</button><button id="confirmcancel" class="toolbar_button">Cancel</button></center>
-				</div>
+				<h2 id="confirmation_title">Save Confirmation</h2>
+				<hr/>
+				<span id="confirmation_msg">
+					Click OK to save your changes and return to the project browser
+					screen or CANCEL to return to editing.
+				</span>
 			</div>
-
+			<div>
+				<center><button id="confirmok" class="toolbar_button">Ok</button><button id="confirmcancel" class="toolbar_button">Cancel</button></center>
+			</div>
 		</div>
 
-		<form id="project_form">
-		<div class="container" style="z-index: 1;">
-			<header>
-				<div class="header-info">
-					<div class="active_model">
-						<!-- <div class="logo_image"></div> -->
-						<svg width="820px" height="175px" viewBox="0 0 820 175"
-													 version="1.1" xmlns="http://www.w3.org/2000/svg"
-													 xmlns:xlink="http://www.w3.org/1999/xlink">
+	</div>
 
-						 <style type="text/css">
-						 .browsecircle {
-							 fill:rgba(0,0,0,0);
-								 pointer-events: all;
-						 }
-						 .browsecircle:hover {
-							 fill: red;
-						 }
-						 </style>
-						<image xlink:href="../images/logo_editor.png" x="70" y="64" height="100px" width="100px" opacity="0.1980" />
-						<text x="10" y="155" text-anchor="left" font-size="45px" fill="rgba(255,183,165,1)" opacity="0.1980">
-							icon
-						</text>
-						<text x="105" y="140" text-anchor="left" font-size="12px" fill="rgba(255,183,165,0.280)">i n t e r a c t i v e c o n n e c t o m i c s</text>
-						<!-- <text x="135" y="140" text-anchor="left" font-size="15px" fill="rgba(255,183,165,0.180)"></text> -->
-
-						<text x="105" y="155" text-anchor="left" font-size="12px" fill="rgba(255,183,165,0.28)">An Interactive Deep Learning Toolkit for Automatic Segmentation of Neuronal Structures in Brain Images</text>
-						<text x="205" y="170" text-anchor="left" font-size="12px" fill="rgba(255,183,165,0.28)"></text>
-						<line x1="96" y1="130" x2="96" y2="160" style="stroke:rgba(255,183,165,0.128);stroke-width:1" />
-
-						<line x1="0" y1="162" x2="820" y2="162" style="stroke:rgba(72,29,29,1.0);stroke-width:3" />
-						<line x1="0" y1="160" x2="820" y2="160" style="stroke:rgba(255,183,165,0.28);stroke-width:1" />
-
+	<div class="header">
+			<!-- <div class="logo_image"></div> -->
+			<svg width="820px" height="78px" viewBox="0 0 820 78" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+			<image xlink:href="images/logo_browser.png" x="10" y="10" height="48px" width="74px" opacity="0.41980" />
+<!-- 
+			<line x1="0" y1="162" x2="820" y2="162" style="stroke:rgba(72,29,29,1.0);stroke-width:3" />
+			<line x1="0" y1="160" x2="820" y2="160" style="stroke:rgba(255,183,165,0.28);stroke-width:1" /> -->
+			</svg>
+	</div>
+				<div class="toolbar">
+						
+						<svg style="width:25px; height: 40px; float: left;">
+					  	<line x1="25" y1="0" x2="25" y2="40" style="stroke:rgba(0, 0, 0, 0.254);stroke-width:3" />
 						</svg>
-					</div>
+						<input id="browser_button" class="toolbar_button browse_button float_left" type="button" value="">
+						<input id="saveproject_button" class="toolbar_button save_button float_left" type="submit" value="">
 				</div>
-			</header>
-			<!-- <header>
-				<div class="header-info">
-					<div class="logo_description">
-						<div class="logo_image"></div>
-						<br>
-					</div>
-				</div>
-			</header>  -->
-			<!-- header -->
-			<div id="toolbar">
-				<div id="toolbar-table">
-					<svg style="width:25px; height: 40px; float: left;">
-				  	<line x1="25" y1="0" x2="25" y2="40" style="stroke:rgba(0, 0, 0, 0.254);stroke-width:3" />
-					</svg>
-					<input id="browser_button" class="toolbar_button browse_button float_left" type="button" value="">
-					<!-- <img id="browser_button" style="float: left;" class="toolbar_button toolbar_browser_button" src="/images/browser_on.svg" onclick="window.location='/browse';"/> -->
-					<!-- <svg style="width:3px; height: 40px; float: left;">
-				  	<line x1="0" y1="0" x2="0" y2="40" style="stroke:rgba(0, 0, 0, 0.254);stroke-width:3" />
-					</svg> -->
-					<input id="saveproject_button" class="toolbar_button save_button float_left" type="submit" value="">
-					<!-- <img id="saveproject_button" style="float: left; margin-right: 0px;" class="toolbar_button toolbar_browser_button" src="/images/save.svg"/> -->
-					<svg style="width:3px; height: 40px; float: left;">
-				  	<line x1="0" y1="0" x2="0" y2="40" style="stroke:rgba(0, 0, 0, 0.254);stroke-width:3" />
-					</svg>
-					<svg style="width:25px; height: 40px; float: right;">
-						<line x1="0" y1="0" x2="0" y2="40" style="stroke:rgba(0, 0, 0, 0.254);stroke-width:3" />
-					</svg>
-				</div>
-			</div>
+				
+	<form id="project_form">
+		<div class="container" style="z-index: 1;">
+
 			<article>
 
 				<div class="project_section_title">Model Settings</div>
@@ -223,85 +179,17 @@
 					</table>
 				</div>
 
-				<div class="project_section_title">Training Set</div>
-				<div class="project_section">
-					<table class="gridtable" id="images_table">
-						<tr>
-							<th class="label_column">Available</th>
-							<th class="label_column"></th>
-							<th class="label_column">Selected</th>
-						</tr>
-						<tr id="new_label_template">
-							<td>
-								<select class="multiple_select" id="availableimages" multiple>
-								</select>
-							</td>
-							<td>
-								<table>
-									<tr>
-										<td>
-											<img id="addimages" class="imageaction toolbar_browser_button" src="/images/double_arrows.svg"/>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<img id="removeimages" class="rotate180  imageaction" src="/images/double_arrows.svg"/>
-										</td>
-									</tr>
-								</table>
-
-							</td>
-							<td>
-								<select class="multiple_select" id="projectimages" multiple>
-								</select>
-							</td>
-						</tr>
-					</table>
-				</div>
-
-				<div class="project_section_title">Validation Set</div>
-				<div class="project_section">
-					<table class="gridtable" id="images_table">
-						<tr>
-							<th class="label_column">Available</th>
-							<th class="label_column"></th>
-							<th class="label_column">Selected</th>
-						</tr>
-						<tr id="new_label_template">
-							<td>
-								<select class="multiple_select" id="available_validation_images_listbox" multiple>
-								</select>
-							</td>
-							<td>
-								<table>
-									<tr>
-										<td>
-											<img id="add_validation_images" class="imageaction toolbar_browser_button" src="/images/double_arrows.svg"/>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<img id="remove_validation_images" class="rotate180  imageaction" src="/images/double_arrows.svg"/>
-										</td>
-									</tr>
-								</table>
-
-							</td>
-							<td>
-								<select class="multiple_select" id="validation_images_listbox" multiple>
-								</select>
-							</td>
-						</tr>
-					</table>
-				</div>
-
-
 
 				<div class="copyright">
-					Copyright © 2015 Felix Gonda. Master Thesis, Harvard University . All Rights Reserved.
+					<img src="images/harvard.png" class="harvard">
+					<div class="credits-divider"></div>
+					<img src="images/seaslogo.png" class="seas">
+					<div class="credits-divider"></div>
+					<img src="images/mcb.svg" class="mcb">
 				</div>
 
 			</article> <!-- article -->
+
 
 		</div> <!-- container -->
 

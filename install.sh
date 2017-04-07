@@ -8,12 +8,15 @@ if [ ! -d "code/web/resources" ]; then
     exit
 fi
 
+rm data/input/*
+
 cd code/web/resources
-rm -rf output labels train validate
+rm -rf output labels train validate input
 ln -s ../../../data/train train
 ln -s ../../../data/valid validate
 ln -s ../../../data/segmentation output
 ln -s ../../../data/labels labels
+ln -s ../../../data/input input
 cd ../../..
 
 echo 'creating database.'

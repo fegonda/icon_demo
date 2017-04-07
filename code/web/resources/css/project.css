@@ -1,3 +1,63 @@
+body {
+  -webkit-user-select: none;
+     -moz-user-select: -moz-none;
+      -ms-user-select: none;
+          user-select: none;
+
+          abackground-color: rgba(91, 43, 43, 1);
+          abackground-color: rgba(127, 87, 86, 1);
+
+  font-size: 16px;
+  line-height: 150%;
+  color: rgba(255,255,255,0.75);
+
+}
+
+
+body#page {
+  background-color: rgba(91, 43, 43, 1);
+  abackground-color: rgba(117, 137, 58, 1);
+  abackground-color: #42531E;
+  abackground-image: url(../images/page_background.png);
+  acolor: #E6FFB0;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  background-position: 0 0;
+  background-repeat: repeat-x;
+   font-family="Futura LT W01 Book,Helvetica,sans-serif,Arial"
+
+    /*    background: url(../images/page_gradient.png) no-repeat center center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;*/
+}
+
+.container
+{
+    position: absolute;
+    left: 0px;
+    top: 150px;
+}
+
+.footer
+{
+    position: absolute;
+    left: 0px;
+    top: 690px;
+    height: 200px;
+    aborder: solid red 1px;
+
+}
+
+.header
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+
+
 .image-grid {
 	 min-height: 400px;
 	  min-width: 920px;
@@ -47,19 +107,7 @@ input:focus {
   color: #EE9C91;
 }
 
-.copyright {
-  width: 920px;
-  margin-top: 10px;
-  height: 20px;
 
-  float: left;
-  text-align: center;
-  line-height: 1;
-  color: #884949;
-  font-size: 12px;
-  padding-top: 0px;
-  aborder: 1px solid;
-}
 
 /*.settings {
   margin-top: 15px;
@@ -78,13 +126,24 @@ input:focus {
   width: 150px;
 }
 
+.toolbar
+{
+    position: absolute;;
+    top: 90px;
+    left: 5px;
+    margin: 5px;
+    height: 34px;
+    width: 820px;
+    background: rgba(255,255,255,0.15);
+    1border: solid rgba(255,255,255,0.15) 1px;
+}
 
 .project_section_title {
-	margin-left: 60px;
+	margin-left: 10px;
 	width: 800px;
 	aheight: 30px;
-	padding-top: 20px;
-	float: left;
+	apadding-top: 20px;
+	afloat: left;
 	aborder: 1px solid rgba(255,255,255,0.1);
 	abackground-image: url(../images/module_light.png);
 	abox-shadow: 0 8px 4px -4px rgba(44,12,12,0.5);
@@ -92,20 +151,17 @@ input:focus {
 
 .project_section
 {
-	margin-left: 60px;
+	margin: 5px;
 	width: 800px;
-	min-height: 80px;
-	amargin-top: 15px;
 	padding: 10px;
-	float: left;
 	border: 1px solid rgba(255,255,255,0.1);
-	background-image: url(../images/module_dark.png);
+	abackground-image: url(../images/module_dark.png);
 	box-shadow: 0 8px 4px -4px rgba(44,12,12,0.5);
 }
 
 
 .labels {
-margin-left: 60px;
+margin-left: 10px;
 width: 800px;
   min-height: 80px;
   margin-top: 15px;

@@ -46,6 +46,10 @@ function(Button, Util, Color, Ruler, ImageViewer, Project)
   Toolbar.prototype.labelClicked = function(e)
   {
     var node = e.toElement;
+    if (node == null) {
+      node = e.target;
+    }
+
     while(node.parentElement != this.labels_container) {
       node = node.parentElement;
     }

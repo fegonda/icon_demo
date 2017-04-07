@@ -61,7 +61,7 @@ class Tables:
             cmd += "ProjectId TEXT, "
             cmd += "ProjectType TEXT, "
             cmd += "ImageId TEXT, "
-            cmd += "Purpose INT DEFAULT 0, "
+            cmd += "Purpose INT DEFAULT 3, "
             cmd += "SegmentationRequestTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             cmd += "SegmentationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             cmd += "SegmentationPriority INT DEFAULT 0, "
