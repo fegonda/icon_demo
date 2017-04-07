@@ -443,6 +443,8 @@ class Data:
         print 'valid_new: ', valid_new
         images = DB.getImages( self.project.id, purpose=1, new=valid_new, annotated=True )
 
+        print '==>validation:'
+        print images
         # bailout if there's no images to train.
         if len(images) == 0:
             return
@@ -711,8 +713,11 @@ class Data:
         pad = patchSize
 
         #img = tiff.imread( imgPath )
-        p_h5data = '../../data/%s'%(data_stack_file)
-        imgPath = get_slice(p_h5data, data_stack_name,imageId)
+        p_h5data = '../../data'
+        print 'data_stack_file:', data_stack_file
+        print 'data_stack_name:', data_stack_name
+        print 'path:', p_h5data
+        img = H5Data.get_slice(p_h5data, data_stack_name,imageId)
         img = np.pad(img, ((pad, pad), (pad, pad)), mode)
         img = Utility.normalizeImage(img)
 
@@ -774,6 +779,8 @@ class Data:
 
         whole_data_std = np.clip(whole_data_std, 0.00001, np.max(whole_data_std))
         whole_data = whole_data / np.tile(whole_data_std,(np.shape(whole_data)[0],1))
+
+        print 'min:', np.min(whole_data), np.max(whole_data)
 
         return whole_data, whole_set_labels, whole_data_mean, whole_data_std
 

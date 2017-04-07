@@ -25,6 +25,7 @@ import StringIO
 import base64
 import math
 import zlib
+from scipy.misc import imsave
 
 import tifffile as tiff
 import glob
@@ -35,6 +36,13 @@ sys.path.insert(2,os.path.join(base_path, './cnn'))
 sys.path.insert(3,os.path.join(base_path, './mlp'))
 sys.path.insert(4,os.path.join(base_path, '../database'))
 
+DATA_PATH_IMAGES = os.path.join(base_path, '../../data/input')
+DATA_PATH_SEGMENTATION = os.path.join(base_path, '../../data/segmentation')
+DATA_PATH = os.path.join(base_path, '../../data')
+DATA_PATH_LABELS = os.path.join(base_path, '../../data/labels')
+DATA_NAME = 'main'
+
+
 from manager import Manager
 from utility import Utility
 from utility import enum
@@ -42,6 +50,7 @@ from settings import Settings
 from paths import Paths
 from datasets import DataSets
 from db import DB
+from h5data import H5Data
 from project import Project
 #from performance import Performance
 
@@ -145,8 +154,11 @@ class Prediction(Manager):
 
         # serialize to file
         segPath = '%s/%s.%s.seg'%(Paths.Segmentation, task.id, project.id)
-        #self.save_probs( probs, project.id, task.id )
-        self.classify_n_save( path, segPath, project )         
+        seg = H5Data.get_slice( DATA_PATH, DATA_NAME, task.id )
+        self.classify_n_save( seg, segPath, project )
+        #self.classify_n_save( path, segPath, project )         
+
+        H5Data.generate_preview( DATA_PATH, DATA_NAME, DATA_PATH_LABELS, DATA_PATH_SEGMENTATION, DATA_PATH_IMAGES, task.id, project.id )
 
         end_time = time.clock()
         duration = (end_time - start_time)
@@ -177,10 +189,9 @@ class Prediction(Manager):
 
             self.classify_n_save( path, segPath, project )
 
-    def classify_n_save(self, imagePath, segPath, project):
+    def classify_n_save(self, image, segPath, project):
 
-        image = tiff.imread( imagePath )
-        #image = Utility.normalizeImage( image ) - project.mean
+        #image = tiff.imread( imagePath )
         image = Utility.normalizeImage( image )
 
         # classify the image

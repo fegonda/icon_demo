@@ -381,6 +381,7 @@ class CNN(object):
                     self.best_validation_loss = this_validation_loss
                     best_iter = iter
 
+                    print '===>saving....'
                     self.save()
                     print "New best score!"
 

@@ -520,7 +520,7 @@ class DB:
         new=False,
         trainingNew=False,
         segmentation=False):
-        purpose_str = DB.purpose_int_to_str(purpose)
+        #purpose_str = DB.purpose_int_to_str(purpose)
         images = []
         connection = lite.connect( DATABASE_NAME, timeout=30)
         with connection:
@@ -528,7 +528,7 @@ class DB:
             cmd  = DB.QueryImage
             #cmd  = "SELECT ImageId, AnnotationFile, "
             #cmd += "SegmentationFile, TrainingScore "
-            cmd += "WHERE ProjectId=? AND Purpose=?"
+            cmd += "WHERE ProjectId=? AND Purpose=? "
             if annotated:
                 cmd += "AND AnnotationFile is NOT NULL "
                 if new:
@@ -538,7 +538,9 @@ class DB:
             if purpose == 3:
                 cmd += "ORDER BY TrainingScore DESC"
 
-            vals = (projectId, purpose_str)
+            #print 'projectId:',projectId, 'purpose:', purpose
+            #print 'cmd:', cmd
+            vals = (projectId, purpose)
             cur.execute( cmd, vals )
             results = cur.fetchall()
             for result in results:

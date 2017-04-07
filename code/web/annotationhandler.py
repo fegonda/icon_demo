@@ -12,6 +12,7 @@ import json
 import h5py
 from PIL import Image
 from datetime import datetime, date
+from scipy.misc import imread
 
 base_path = os.path.dirname(__file__)
 sys.path.insert(1,os.path.join(base_path, '../common'))

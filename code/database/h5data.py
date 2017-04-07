@@ -10,6 +10,9 @@ from skimage import color
 #from skimage import io
 from PIL import Image
 import json
+import zlib
+import StringIO
+import base64
 
 
 base_path = os.path.dirname(__file__)
@@ -90,10 +93,9 @@ class H5Data:
 
     @staticmethod
     def generate_preview( pathH5data, name, pathLabels, pathSegmentation, pathImages, imageId, projectId ):
-
         # input image
         volume = np.array(h5py.File( '%s/%s'%(pathH5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
-        image = volume[int(imageId),:,:]
+        image = volume[int(imageId.strip()),:,:]
         background = color.gray2rgb(image)*255
         background = background.astype(dtype=np.int8)
         data = np.zeros((image.shape[0], image.shape[1], 4), dtype=np.int8)
@@ -103,20 +105,26 @@ class H5Data:
 
 
         # segmentations
-        p_segmentations = '%s/%s.%s.json'%(pathSegmentation,imageId, projectId )
+        p_segmentations = '%s/%s.%s.seg'%(pathSegmentation,imageId, projectId )
         data = np.zeros((image.shape[0], image.shape[1], 4), dtype=np.int8)
         data[:,:,:3] = 0
         data[:,:500,:1] = 0
         data[:,:500,:2] = 0
         data[:,:,3] = 0
         if os.path.isfile(p_segmentations):
-             with open(p_segmentations) as json_file:
-                json_data = json.load( json_file )                
-                labels = [(255,0,0,255), (0,255,0,255)]
-                for label, coords in zip(labels, json_data):
-                    for i in range(0, len(coords), 2):
-                        col = coords[i]
-                        row = coords[i+1]
+            with open(p_segmentations, 'r') as content_file:
+                compressed = content_file.read()
+                decompressed = zlib.decompress(compressed)
+                seg = base64.b64decode(decompressed)
+                seg = json.loads( seg )
+                seg = np.array(seg)
+                seg = np.reshape(seg, image.shape)
+                print type(seg)
+                print seg.shape
+                labels = [(255,0,0,85), (0,255,0,85)]
+                for col in range(seg.shape[0]):
+                    for row in range(seg.shape[1]):
+                        label = labels[0] if seg[row][col] == 0 else labels[1]
                         data[row, col, 0] = label[0]
                         data[row, col, 1] = label[1]
                         data[row, col, 2] = label[2]
