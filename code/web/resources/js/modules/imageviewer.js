@@ -18,6 +18,7 @@ function($, Zlib, Util, Ruler, Project, Layer, Image, Toolbar){
       Rendered : 4,
     };
 
+    this.alpha = 0.6;
     this.state = State.Explore;
     this.init_segmentation = true;
     this.sync_annotations = false;
@@ -447,7 +448,7 @@ function($, Zlib, Util, Ruler, Project, Layer, Image, Toolbar){
       		j++;
       		console.log('==--->applying label: ' + label.name + ' id:' + label_id);
       	}
-        segmentation_data.data[i] = 155;
+        segmentation_data.data[i] = 255*this.alpha;
         segmentation_data.data[i-1] = label.b;
         segmentation_data.data[i-2] = label.g;
         segmentation_data.data[i-3] = label.r;
@@ -557,6 +558,16 @@ function($, Zlib, Util, Ruler, Project, Layer, Image, Toolbar){
   ImageViewer.prototype.onBrushSizeChanged = function(size)
   {
     this.brushsize = size;
+  }
+
+  ImageViewer.prototype.onSegmentationAlphaChanged = function(size)
+  {
+    this.alpha = size;
+    console.log('alpha: ' + size);
+    this.applySegmentation();
+
+    this.finalizeLoading();
+    this.draw();
   }
 
   ImageViewer.prototype.onZoomFactorChanged = function(factor)
@@ -695,7 +706,10 @@ function($, Zlib, Util, Ruler, Project, Layer, Image, Toolbar){
     //toolbar.registersynccallback( this.syncAnnotations.bind(this) );
     toolbar.zoom_ruler.registerValueChangedCallback( this.onZoomFactorChanged.bind(this ) );
     toolbar.brush_ruler.registerValueChangedCallback( this.onBrushSizeChanged.bind(this ) );
+    toolbar.segmentation_alpha_ruler.registerValueChangedCallback( this.onSegmentationAlphaChanged.bind(this ) );
     toolbar.registerSelectCallback( this.onSelect.bind(this ) );
+
+    this.alpha = toolbar.segmentation_alpha_ruler.value;
   }
 
   ImageViewer.prototype.onSelect = function(selection)

@@ -1,13 +1,13 @@
 define(['util'], function(Util)
 {
-  var Ruler = function(title, parentId, textContainerId, minvalue, maxvalue){
+  var Ruler = function(title, parentId, textContainerId, minvalue, maxvalue, initval=0.0){
     this.title = title;
     this.parent = document.getElementById(parentId);
     this.text = document.getElementById(textContainerId);
     this.minvalue = minvalue;
     this.maxvalue = maxvalue;
     this.offset = 10;
-    this.value = this.minvalue;
+    this.value = initval;
     this.x = 0;
     this.y = this.offset;
     this.label_height = 30;
@@ -42,12 +42,23 @@ define(['util'], function(Util)
     this.foreground.onmousedown = this.onmousedown.bind(this);
     this.foreground.onmouseout = this.onmouseout.bind(this);
     this.foreground.onmouseup = this.onmouseup.bind(this);
+
+    console.log('Ruler vallue: '+ this.value);
+    //this.updategrabber();
+    // this.y = Math.min(this.y, this.foreground.height-this.offset);
+    // this.y = Math.max(this.y, this.offset);
+    // this.value = Util.map_range(this.y, this.offset, this.foreground.height-this.offset, this.minvalue, this.maxvalue);
+    this.y = Util.map_range(this.value, this.minvalue, this.maxvalue, this.offset, this.foreground.height-this.offset);
+
+    this.updategrabber();
     this.renderForeground();
+
   }
 
 
   Ruler.prototype.renderForeground = function()
   {
+    console.log('Ruler.renderForeground');
     var context = this.foreground.getContext("2d");
     var w = this.foreground.width;
     var h = this.foreground.height;
@@ -127,14 +138,14 @@ define(['util'], function(Util)
 
       context.lineWidth = 1;
       context.clearRect(0, this.background.height - this.label_height-6, this.label_height, this.label_height);
-      context.fillStyle = 'rgba(255,255,255,0.10)';
+      context.fillStyle = 'rgba(255,255,255,0.20)';
       context.fillRect(0, this.background.height - this.label_height-6, this.label_height, this.label_height);
-      context.fillStyle = 'rgba(255,255,255,0.30)';
+      context.fillStyle = 'rgba(255,255,255,0.80)';
       context.save();
       context.translate(10,h*0.7);//x-10,h/2);
       context.rotate(-0.5*Math.PI);
 
-      context.font = '9pt Arial';
+      context.font = '11pt Arial';
       context.fillText(this.title,0,0);
       context.restore();
 
@@ -152,7 +163,8 @@ define(['util'], function(Util)
 
   Ruler.prototype.onmousemove = function(e)
   {
-    //console.log('Ruler.onmousemove drag: ' + this.dragging);
+    //console.log('Ruler.onmousemove drag: ' + this.dragging + ' mousey: ' + this.y);
+
     if (!this.dragging) return;
     this.capturemouse(e);
     this.y = this.mousey;

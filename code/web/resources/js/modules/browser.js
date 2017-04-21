@@ -287,10 +287,24 @@ define(['jquery','util', 'zlib', 'chart','scrollbar', 'tiff'], function($, Util,
 
     this.slices = [];
 
+    var slice;
     // load all the slice data from json file
     for(i=0; i<this.data.num_slices; i++) {
       this.slices.push( new Slice(i) );
     }
+
+
+    var image;
+    
+    var i_slice = 0;
+    for(i=0; i<this.data.project.images.length; i++) {
+      image = this.data.project.images[i];
+      i_slice = parseInt( image.image_id )
+      slice = this.slices[i_slice];
+      slice.type = image.purpose;
+      console.log(slice);
+    }
+
 
     console.log( this.data );
     this.populate_projects_dom();
@@ -435,7 +449,7 @@ define(['jquery','util', 'zlib', 'chart','scrollbar', 'tiff'], function($, Util,
       i_slice = parseInt( image.image_id )
       slice = this.slices[i_slice];
       slice.type = image.purpose;
-      console.log(slice);
+      // console.log(slice);
     }
 
 

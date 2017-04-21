@@ -270,13 +270,14 @@ body {
 }
 
 #zoom_text,
-#brush_text {
+#brush_text,
+#segmentation_alpha_text {
   height: 20px;
   width: 30px;
   margin-top: 180px;
   margin-left: 2px;
   aborder: 1px solid red;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.955);
   font-size: 13px;
 
 }

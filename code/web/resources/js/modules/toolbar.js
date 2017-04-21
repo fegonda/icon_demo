@@ -7,6 +7,9 @@ function(Button, Util, Color, Ruler, ImageViewer, Project)
     this.image = image;
     this.brush_ruler = new Ruler('brush size', 'brush_tool', 'brush_text', 1, 50);
     this.zoom_ruler = new Ruler('zoom factor', 'zoom_tool', 'zoom_text', 1.0, 10.0);
+    this.segmentation_alpha_ruler = new Ruler('seg. alpha', 'segmentation_alpha_tool', 'segmentation_alpha_text', 0.0, 1.0, 0.6);
+
+
   };
 
   Toolbar.prototype.initialize = function()
@@ -223,6 +226,8 @@ function(Button, Util, Color, Ruler, ImageViewer, Project)
   {
     this.brush_ruler.cancelmouse();
     this.zoom_ruler.cancelmouse();
+    this.segmentation_alpha_ruler.cancelmouse();
+
   }
 
   Toolbar.prototype.ontogglelabels = function(e)
@@ -259,6 +264,7 @@ function(Button, Util, Color, Ruler, ImageViewer, Project)
     this.segmentation_button.className = this.segmentation_on ?
     (this.segmentation_button.className.replace(' toggledon', '')) :
     (this.segmentation_button.className + ' toggledon');
+    this.zoom_ruler.renderForeground();
 
   }
 
