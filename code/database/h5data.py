@@ -121,7 +121,7 @@ class H5Data:
                 seg = np.reshape(seg, image.shape)
                 print type(seg)
                 print seg.shape
-                labels = [(255,0,0,85), (0,255,0,85)]
+                labels = [(255,0,0,155), (0,255,0,155)]
                 for col in range(seg.shape[0]):
                     for row in range(seg.shape[1]):
                         label = labels[0] if seg[row][col] == 0 else labels[1]
