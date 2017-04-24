@@ -82,6 +82,7 @@ class BrowseHandler(tornado.web.RequestHandler):
         if len(tokens) > 2 and tokens[1] == 'stop':
             DB.stopProject( tokens[2] )
         elif len(tokens) > 2 and tokens[1] == 'start':
+            print 'tokens:', tokens[2], tokens[1]
             DB.startProject( tokens[2] )
 
 

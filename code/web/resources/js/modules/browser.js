@@ -379,8 +379,8 @@ define(['jquery','util', 'zlib', 'chart','scrollbar', 'tiff'], function($, Util,
     var active = (this.data.active == undefined) ? '':this.data.active.id;
     //document.getElementById("active_project").innerHTML = active;
 
-    localStorage.IconProjectId = (this.data.project != null) ? this.data.project.id:undefined;
-    //this.setProjectId();
+    //localStorage.IconProjectId = (this.data.project != null) ? this.data.project.id:undefined;
+    this.setProjectId();
     Util.closeLoadingScreen();
 
     this.syncTimeout = window.setTimeout(this.loadProjects.bind(this), this.refresh_interval);
@@ -662,9 +662,12 @@ define(['jquery','util', 'zlib', 'chart','scrollbar', 'tiff'], function($, Util,
 
   Browser.prototype.updateCurrentProjectState = function() {
 
+      console.log('===>updateCurrentProjectState: ' + this.data.project.id);
       if (this.data.project.id == undefined) {
         return;
       }
+
+      console.log('===>mod status: ' + this.data.project.training_mod_status);
 
       if (this.data.project.training_mod_status == 0) {
           this.stopproject_button.value = 'start'

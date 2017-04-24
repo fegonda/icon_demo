@@ -2,12 +2,10 @@ import os
 import sys
 import numpy as np
 import h5py
-#import tifffile as tiff
 from scipy.misc import imread
 from scipy.misc import imsave
 from scipy.misc import imresize
 from skimage import color
-#from skimage import io
 from PIL import Image
 import json
 import zlib
@@ -28,8 +26,6 @@ class H5Data:
     def __init__(self, path=Paths.Data, name='main'):
         self.index = 0
         self.path='%s/%s'%(path,data_stack_file)
-        print 'path:', self.path
-        print 'isfile:', os.path.isfile(path)
         self.volume = np.array(h5py.File( path ,'r')[name],dtype=np.float32)/(2.**8)
 
     @staticmethod
@@ -39,10 +35,6 @@ class H5Data:
 
     @staticmethod
     def extract_to(p_h5data, name, p_image, projectId, imageIndex, purpose):
-        # print 'p_h5data:', p_h5data
-        # print 'name:',name
-        # print 'to:', p_image
-        # print 'index:', imageIndex
         path = '%s/%s.jpg'%(p_image, imageIndex)
         if os.path.isfile(path):
             return
@@ -52,27 +44,14 @@ class H5Data:
         DB.storeProject( project )
         volume = np.array(h5py.File( p_h5data ,'r')[name],dtype=np.float32)/(2.**8)
         image = volume[int(imageIndex),:,:]
-        # imsave('%s'%(path), image)
-
+ 
         image = color.gray2rgb( image )
         image = imresize(image, (525,525))
-        #path = '%s/%s.png'%(p_image, imageIndex)
         imsave('%s'%(path), image)
  
 
     @staticmethod
     def alpha_composite(src, dst):
-        '''
-        Return the alpha composite of src and dst.
-
-        Parameters:
-        src -- PIL RGBA Image object
-        dst -- PIL RGBA Image object
-
-        The algorithm comes from http://en.wikipedia.org/wiki/Alpha_compositing
-        '''
-        # http://stackoverflow.com/a/3375291/190597
-        # http://stackoverflow.com/a/9166671/190597
         src = np.asarray(src)
         dst = np.asarray(dst)
         out = np.empty(src.shape, dtype = 'float')
@@ -86,7 +65,6 @@ class H5Data:
         np.seterr(**old_setting)    
         out[alpha] *= 255
         np.clip(out,0,255)
-        # astype('uint8') maps np.nan (and np.inf) to 0
         out = out.astype('uint8')
         out = Image.fromarray(out, 'RGBA')
         return out
@@ -119,8 +97,6 @@ class H5Data:
                 seg = json.loads( seg )
                 seg = np.array(seg)
                 seg = np.reshape(seg, image.shape)
-                print type(seg)
-                print seg.shape
                 labels = [(255,0,0,155), (0,255,0,155)]
                 for col in range(seg.shape[0]):
                     for row in range(seg.shape[1]):
@@ -159,28 +135,8 @@ class H5Data:
         path = '%s/%s.jpg'%(pathImages, imageId)
         combined.save( path )
 
-        # path = '%s/%s.jpg'%(p_image, i)
-        # imsave('%s'%(path), image)
-
-        #dsafd
-        # volume = np.array(h5py.File( p_h5data ,'r')[name],dtype=np.float32)/(2.**8)
-        # image = volume[int(i),:,:]
-        # background = color.gray2rgb( image )
-
-        # np.array
-        # foreground = Image.open("test2.png")
-
-        # background.paste(foreground, (0, 0), foreground)
-        # background.show()
-        #pass
-
     @staticmethod
     def extract_all(p_h5data, name, p_image):
-        # print 'p_h5data:', p_h5data
-        # print 'name:',name
-        # print 'to:', p_image
-        # print 'index:', imageIndex
-
         volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
         for i in range(volume.shape[0]):
             image = volume[int(i),:,:]
@@ -192,10 +148,8 @@ class H5Data:
 
     @staticmethod
     def get_slice(p_h5data, name, index):
-        print 'path: ', '%s/%s'%(p_h5data,data_stack_file)
-        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)
+        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)/(2.**8)
         image = volume[int(index),:,:]
-        print np.min(image), np.max(image)
         return image
 
     def get_pair(self, index1, index2):

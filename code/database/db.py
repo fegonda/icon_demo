@@ -397,6 +397,7 @@ class DB:
 
     @staticmethod
     def startProject(projectId, activeMode=0):
+        print 'activemode:', activeMode
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         connection = lite.connect( DATABASE_NAME, timeout=30)
         with connection:

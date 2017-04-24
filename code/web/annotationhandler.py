@@ -82,30 +82,20 @@ class AnnotationHandler(tornado.web.RequestHandler):
             self.set_header('Content-Type', 'application/octstream')
             self.write(self.getstatus( imageId, projectId, guid, segTime ))
         else:
-            print 'rendering html....'
-            #self.renderimage( projectId, imageId, purpose )
             self.render("annotate.html")
 
             
 
     def post(self):
-        print ('-->AnnotationHandler.post...' + self.request.uri)
         tokens  = self.request.uri.split(".")
         action=tokens[1]
-        # imageId = tokens[1]
-        # projectId = tokens[2]
-        #action  = None if (len(tokens) < 4) else tokens[3]
 
-        print 'action: ', action
         if action == 'saveannotations':
             data = self.get_argument("annotations", default=None, strip=False)
             imageId = self.get_argument("id", default=None, strip=False)
             projectId = self.get_argument("projectid", default=None, strip=False)
-            print 'projectId:', projectId
-            print 'imageId:',imageId
             self.saveannotations(imageId, projectId, data)
         elif action == 'setpurpose':
-            print( 'set image purpose')
             purpose = self.get_argument("purpose", default=None, strip=False)
             imageId = self.get_argument("id", default=None, strip=False)
             projectId = self.get_argument("projectid", default=None, strip=False)
@@ -114,36 +104,16 @@ class AnnotationHandler(tornado.web.RequestHandler):
 
     def getimage(self, imageId, projectId):
         image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
-
-        print '----values'
-        print np.min(image), np.max(image)
-
         image = Image.fromarray(np.uint8(image*255))
-        a = np.array(image)
-        
-        print np.min(a), np.max(a)
-        print a
-
+ 
         output = StringIO.StringIO()
         image.save(output, 'TIFF')
         return output.getvalue()
-
-    # def getpreviewimage(self, imageId, projectId):
-    #     image = H5Data.get_slice(DATA_PATH, DATA_NAME, imageId )
-    #     image = Image.fromarray(np.uint8(image*255))
-    #     output = StringIO.StringIO()
-    #     image.save(output, 'JPEG')
-    #     return output.getvalue()
-
 
     def renderimage(self, projectId, imageId, purpose):
         H5Data.extract_to(DATA_PATH, DATA_NAME, DATA_PATH_IMAGES, projectId, imageId, purpose )
 
         self.render("annotate.html")
-
-    def close(self, signal, frame):
-        print ('Saving..')
-        sys.exit(0)
 
 
     def getuuid(self, projectId, imageId, guid):
@@ -158,13 +128,11 @@ class AnnotationHandler(tornado.web.RequestHandler):
             now = datetime.now()
             annotationTime = datetime.strptime(task.annotationTime, '%Y-%m-%d %H:%M:%S')
             diff = now - annotationTime
-            print 'diff: ', diff.total_seconds()
         elif task.annotationStatus == 1:
             now = datetime.now()
             annotationTime = datetime.strptime(task.annotationTime, '%Y-%m-%d %H:%M:%S')
             diff = now - annotationTime
             diff = diff.total_seconds()
-            print 'time diff:', diff
             if diff > expiration:
                 data['uuid'] = DB.lockImage( projectId, imageId )
         else:
@@ -201,7 +169,6 @@ class AnnotationHandler(tornado.web.RequestHandler):
         return Utility.compress(content)
 
     def saveannotations(self, imageId, projectId, data):
-        print 'saveannotations....%s'%(imageId)
         # Always save the annotations to the labels folder.
         path = '%s/%s.%s.json'%(Paths.Labels, imageId,projectId)
         with open(path, 'w') as outfile:
@@ -212,7 +179,6 @@ class AnnotationHandler(tornado.web.RequestHandler):
 
         H5Data.generate_preview( DATA_PATH, DATA_NAME, DATA_PATH_LABELS, DATA_PATH_SEGMENTATION, DATA_PATH_IMAGES, imageId, projectId )
 
-        print '---->>>>>training images for :',projectId
         images = DB.getTrainingImages( projectId )
         for img in images:
             print img.id, img.annotationFile, img.annotationTime, img.annotationStatus
@@ -229,9 +195,6 @@ class AnnotationHandler(tornado.web.RequestHandler):
         segTime = segTime.replace("%20", " ")
         segTime = time.strptime(segTime, '%Y-%m-%d %H:%M:%S')
 
-        print ''
-        print 'dbtime:', taskSegTime, 
-        print ' qtime:', segTime
         if segTime == taskSegTime:
             return False
 

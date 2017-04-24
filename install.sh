@@ -9,6 +9,9 @@ if [ ! -d "code/web/resources" ]; then
 fi
 
 rm data/input/*
+rm data/segmentation/*
+rm data/labels/*
+rm data/models/*
 
 cd code/web/resources
 rm -rf output labels train validate input
