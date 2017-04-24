@@ -8,10 +8,10 @@ if [ ! -d "code/web/resources" ]; then
     exit
 fi
 
-rm data/input/*
-rm data/segmentation/*
-rm data/labels/*
-rm data/models/*
+rm data/input/*.jpg
+rm data/segmentation/*.seg
+rm data/labels/*.json
+rm data/models/*.pkl
 
 cd code/web/resources
 rm -rf output labels train validate input
