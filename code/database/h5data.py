@@ -72,7 +72,7 @@ class H5Data:
     @staticmethod
     def generate_preview( pathH5data, name, pathLabels, pathSegmentation, pathImages, imageId, projectId ):
         # input image
-        volume = np.array(h5py.File( '%s/%s'%(pathH5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
+        volume = np.array(h5py.File( '%s/%s'%(pathH5data,data_stack_file) ,'r')[name],dtype=np.float32)/(2.**8)
         image = volume[int(imageId.strip()),:,:]
         background = color.gray2rgb(image)*255
         background = background.astype(dtype=np.int8)
@@ -137,7 +137,7 @@ class H5Data:
 
     @staticmethod
     def extract_all(p_h5data, name, p_image):
-        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)#/(2.**8)
+        volume = np.array(h5py.File( '%s/%s'%(p_h5data,data_stack_file) ,'r')[name],dtype=np.float32)/(2.**8)
         for i in range(volume.shape[0]):
             image = volume[int(i),:,:]
             # image = color.gray2rgb( image )
