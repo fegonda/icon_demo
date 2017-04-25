@@ -1,52 +1,37 @@
-#INSTRUCTIONS
+## Welcome to GitHub Pages
 
-#Installation onto linux system
+You can use the [editor on GitHub](https://github.com/fegonda/icon_demo/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
-##Code and Data
-Get the code from github using git command as follows:
-> git https://github.com/fegonda/icon_jeff.git
+Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-##Install database
-Run the following command inside the directory icon_jeff:
-> sh  install.sh
+### Markdown
 
+Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-##Running the web server:
-You need to login to odyssey on a specific port in order to access the system from a browser.  
-For example to login using port 8889 you need to login to a specific rclogin machine as follows:
+```markdown
+Syntax highlighted code block
 
-> ssh -L 8889:localhost:8889 yourusername@rclogin09.rc.fas.harvard.edu
+# Header 1
+## Header 2
+### Header 3
 
-Then after login, you need to srun to a partition where you can run icon from:
+- Bulleted
+- List
 
-> srun --pty -p cox --mem 8000 -t 300 --tunnel 8889:8888 --gres=gpu:1 -n 4 -N 1 bash
+1. Numbered
+2. List
 
+**Bold** and _Italic_ and `Code` text
 
-#Starting icon services
+[Link](url) and ![Image](src)
+```
 
-> Start the web server by running: 
-sh web.sh
+For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-## Running the training thread
-Start the training thread by running: 
-> sh train.sh
+### Jekyll Themes
 
-## Running the segmentation thread
-Start the segmentation thread by running: 
-> sh segment.sh
+Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/fegonda/icon_demo/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
+### Support or Contact
 
-#Web Access
-## Running the front-end.
-Access the UI by launching the following URL on a browser: 
-http://localhost:8888/browse
-
-## Usability
-- Then select a project from the drop down list. Press the start button to activate a project or stop to deactivate. Only one project can be active at a time.
-- Click on an image form the browser screen to launch the annotation screen
-- The annotation screen has a set of tools on the left.  
--- To annotate, you select a label color, then select the brush icon and then draw on the image surface.  
--- To remove annotations, you select a label color, then the eraser icon then draw on the image surface.
--- The L icon toggles on/off annotations
--- The S icon toggles on/off segmentations
-
+Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
