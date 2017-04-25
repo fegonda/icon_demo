@@ -30,6 +30,18 @@ body, html {
   font-size: 10px;
 }
 
+.footer
+{
+    afloat: left;
+    aposition: absolute;
+    aleft: 0px;
+    aright: 0;
+    width: 600px;
+    height: 200px;
+    aborder: solid red 1px;
+
+}
+
 div.welcomepage_container
 {
   text-align: center;

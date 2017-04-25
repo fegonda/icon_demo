@@ -23,18 +23,18 @@ button:focus {
   background: url("../images/logo_editor.png") no-repeat scroll 0% 0% transparent;
 }
 .logo_big_description {
-  float: left;
-  height: 300px;
+  afloat: left;
+  height: 210px;
   width: 600px;
   opacity: 0.75;
-  margin-left: 65px;
-  margin-top: 60px;
+  amargin-left: 65px;
+  margin-top: 110px;
   background: url("../images/logo_description_big.svg") no-repeat scroll 0% 0% transparent;
-  -webkit-transform: rotate(-20deg);
+/*  -webkit-transform: rotate(-20deg);
   -moz-transform: rotate(-20deg);
   -ms-transform: rotate(-20deg);
   -o-transform: rotate(-20deg);
-  transform: rotate(-20deg);
+  transform: rotate(-20deg);*/
 }
 
 .logo_description {
