@@ -48,7 +48,6 @@ from utility import Utility
 from utility import enum
 from settings import Settings
 from paths import Paths
-from datasets import DataSets
 from db import DB
 from h5data import H5Data
 from project import Project

@@ -109,7 +109,7 @@ def main():
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
 
-    port = 8889
+    port = 8888
     name = 'icon webserver'
     server = Server(name, port)
     server.start()

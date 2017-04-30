@@ -1,0 +1,26 @@
+Error allocating 6379536384 bytes of device memory (out of memory). Driver report 5581651968 bytes free and 12079136768 bytes total 
+Exception in thread prediction:
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+    self.run()
+  File "/home/fgonda/icon/code/model/tasks.py", line 73, in run
+    self.work()
+  File "/home/fgonda/icon/code/model/tasks.py", line 175, in work
+    self.project)
+  File "/home/fgonda/icon/code/model/mlp_classifier.py", line 494, in predict
+    print 'step 3...'
+  File "/home/fgonda/iconenv/local/lib/python2.7/site-packages/theano/compile/function_module.py", line 606, in __call__
+    storage_map=self.fn.storage_map)
+  File "/home/fgonda/iconenv/local/lib/python2.7/site-packages/theano/compile/function_module.py", line 595, in __call__
+    outputs = self.fn()
+MemoryError: Error allocating 6379536384 bytes of device memory (out of memory).
+Apply node that caused the error: GpuFromHost(<TensorType(float32, matrix)>)
+Inputs types: [TensorType(float32, matrix)]
+Inputs shapes: [(1048576, 1521)]
+Inputs strides: [(6084, 4)]
+Inputs values: ['not shown']
+
+HINT: Re-running with most Theano optimization disabled could give you a back-trace of when this node was created. This can be done with by setting the Theano flag 'optimizer=fast_compile'. If that does not work, Theano optimizations can be disabled with 'optimizer=None'.
+HINT: Use the Theano flag 'exception_verbosity=high' for a debugprint and storage map footprint of this apply node.
+
+s
